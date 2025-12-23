@@ -1,0 +1,27 @@
+// ==============================
+// Simple JS Loader
+// ==============================
+
+// URL dello script principale
+const SCRIPT_URL = "https://raw.githubusercontent.com/HappyProgTg/absolute_hack/main/script.js";
+
+// Log di avvio
+console.log("[Loader] Avvio loader");
+
+// Caricamento immediato dello script remoto
+fetch(SCRIPT_URL)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("HTTP Error " + response.status);
+        }
+        return response.text();
+    })
+    .then(code => {
+        const script = document.createElement("script");
+        script.textContent = code;
+        document.documentElement.appendChild(script);
+        console.log("[Loader] Script caricato correttamente");
+    })
+    .catch(err => {
+        console.error("[Loader] Errore nel caricamento dello script:", err);
+    });
