@@ -75,17 +75,21 @@ document.addEventListener("click", e => {
   }
 });
 
-// ----------------------------
-// Auto Logout per evoworld.io
-// ----------------------------
+// ---- Auto Logout evoworld.io ----
 
-let logoutDone = false;
+// variabili GLOBALI sicure
+if (window.logoutDone === undefined) {
+  window.logoutDone = false;
+}
 
-const interval = setInterval(() => {
-  if (logoutDone) return;
+if (window.autoLogoutInterval) {
+  clearInterval(window.autoLogoutInterval);
+}
 
-  // Possibili selettori del logout
-  const logoutBtn =
+window.autoLogoutInterval = setInterval(function () {
+  if (window.logoutDone) return;
+
+  var logoutBtn =
     document.querySelector('button.logout') ||
     document.querySelector('a.logout') ||
     document.querySelector('#logout') ||
@@ -93,18 +97,16 @@ const interval = setInterval(() => {
 
   if (logoutBtn) {
     logoutBtn.click();
-    logoutDone = true;
-    clearInterval(interval);
+    window.logoutDone = true;
+    clearInterval(window.autoLogoutInterval);
     console.log("[AutoLogout] Logout automatico eseguito");
   }
-}, 1000); // controlla ogni secondo
+}, 1000);
 
-// Sicurezza: stop dopo 15 secondi
-setTimeout(() => {
-  if (!logoutDone) {
-    clearInterval(interval);
+// timeout sicurezza
+setTimeout(function () {
+  if (!window.logoutDone) {
+    clearInterval(window.autoLogoutInterval);
     console.log("[AutoLogout] Logout non trovato (timeout)");
   }
 }, 15000);
-
-});
