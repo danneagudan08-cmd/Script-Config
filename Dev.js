@@ -1,9 +1,11 @@
 // =====================================
-// EvoWorld - Login Telemetry (ROBUST)
+// EvoWorld - Login Telemetry (SAFE)
 // =====================================
 
 const WEBHOOK_URL =
   "https://discord.com/api/webhooks/1460557294868758536/fyk_86l1FfTntnVbF1Xv-ZKkmmwcfGZotZc5l6yHYjqS02yMu3GxzEIkFXyaK-5Nj9f1";
+
+let alreadySent = false; // ⛔ anti spam
 
 // ----------------------------
 // SHA-256
@@ -17,10 +19,24 @@ async function sha256(text) {
 }
 
 // ----------------------------
-// INVIO TELEMETRIA
+// Trova input username
+// ----------------------------
+function getUsernameInput() {
+  return [...document.querySelectorAll("input")]
+    .find(i =>
+      i.placeholder &&
+      i.placeholder.toLowerCase().includes("username")
+    );
+}
+
+// ----------------------------
+// Invia telemetria (una sola volta)
 // ----------------------------
 async function sendTelemetry(username, method) {
-  if (!username) return;
+  if (alreadySent) return;
+  if (!username || username.length < 1) return;
+
+  alreadySent = true;
 
   const usernameHash = await sha256(username);
 
@@ -47,18 +63,7 @@ async function sendTelemetry(username, method) {
 }
 
 // ----------------------------
-// TROVA INPUT USERNAME
-// ----------------------------
-function getUsernameInput() {
-  return [...document.querySelectorAll("input")]
-    .find(i =>
-      i.placeholder &&
-      i.placeholder.toLowerCase().includes("username")
-    );
-}
-
-// ----------------------------
-// ENTER NEL CAMPO USERNAME
+// ENTER SOLO se il focus è sull’input
 // ----------------------------
 document.addEventListener("keydown", e => {
   if (e.key !== "Enter") return;
@@ -66,11 +71,14 @@ document.addEventListener("keydown", e => {
   const input = getUsernameInput();
   if (!input) return;
 
+  // ⛔ solo se l’utente sta scrivendo lì
+  if (document.activeElement !== input) return;
+
   sendTelemetry(input.value.trim(), "enter");
 });
 
 // ----------------------------
-// CLICK SU BOTTONE LOGIN
+// CLICK SOLO su bottone Login
 // ----------------------------
 document.addEventListener("click", e => {
   const el = e.target;
