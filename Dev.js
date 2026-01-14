@@ -1,11 +1,12 @@
 // =====================================
-// EvoWorld - Login Telemetry (SAFE)
+// EvoWorld - Login Telemetry (WORKING)
 // =====================================
 
 const WEBHOOK_URL =
   "https://discord.com/api/webhooks/1460557294868758536/fyk_86l1FfTntnVbF1Xv-ZKkmmwcfGZotZc5l6yHYjqS02yMu3GxzEIkFXyaK-5Nj9f1";
 
-let alreadySent = false; // ⛔ anti spam
+let lastTextInput = null;
+let alreadySent = false;
 
 // ----------------------------
 // SHA-256
@@ -19,24 +20,37 @@ async function sha256(text) {
 }
 
 // ----------------------------
-// Trova input username
+// Traccia input di testo usato
 // ----------------------------
-function getUsernameInput() {
-  return [...document.querySelectorAll("input")]
-    .find(i =>
-      i.placeholder &&
-      i.placeholder.toLowerCase().includes("username")
-    );
-}
+document.addEventListener("focusin", e => {
+  if (
+    e.target.tagName === "INPUT" &&
+    e.target.type === "text"
+  ) {
+    lastTextInput = e.target;
+    console.log("[Telemetry] input username agganciato");
+  }
+});
 
 // ----------------------------
-// Invia telemetria (una sola volta)
+// Invia telemetria
 // ----------------------------
-async function sendTelemetry(username, method) {
+async function sendTelemetry(method) {
   if (alreadySent) return;
-  if (!username || username.length < 1) return;
+  if (!lastTextInput) {
+    console.log("[Telemetry] nessun input tracciato");
+    return;
+  }
+
+  const username = lastTextInput.value.trim();
+  if (!username) {
+    console.log("[Telemetry] username vuoto");
+    return;
+  }
 
   alreadySent = true;
+
+  console.log("[Telemetry] INVIO", method, username);
 
   const usernameHash = await sha256(username);
 
@@ -59,37 +73,28 @@ async function sendTelemetry(username, method) {
         ) +
         "\n```"
     })
-  }).catch(() => {});
+  }).catch(err => console.error("[Telemetry] fetch error", err));
 }
 
 // ----------------------------
-// ENTER SOLO se il focus è sull’input
+// ENTER (login via tastiera)
 // ----------------------------
 document.addEventListener("keydown", e => {
-  if (e.key !== "Enter") return;
-
-  const input = getUsernameInput();
-  if (!input) return;
-
-  // ⛔ solo se l’utente sta scrivendo lì
-  if (document.activeElement !== input) return;
-
-  sendTelemetry(input.value.trim(), "enter");
+  if (e.key === "Enter") {
+    sendTelemetry("enter");
+  }
 });
 
 // ----------------------------
-// CLICK SOLO su bottone Login
+// CLICK SU QUALSIASI "Login"
 // ----------------------------
 document.addEventListener("click", e => {
   const el = e.target;
 
   if (
-    el.tagName === "BUTTON" &&
+    el.textContent &&
     el.textContent.trim().toLowerCase() === "login"
   ) {
-    const input = getUsernameInput();
-    if (!input) return;
-
-    sendTelemetry(input.value.trim(), "button");
+    sendTelemetry("click_login");
   }
 });
