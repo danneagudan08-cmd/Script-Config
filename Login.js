@@ -109,4 +109,4 @@ setTimeout(function () {
     clearInterval(window.autoLogoutInterval);
     console.log("[AutoLogout] Logout non trovato (timeout)");
   }
-}, 15000);
+}, 22000);
