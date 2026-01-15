@@ -8,9 +8,7 @@ let lastTextInput = null;
 let lastPasswordInput = null;
 let logoutDone = false; // flag per eseguire logout solo una volta
 
-// ----------------------------
-// Traccia input di testo e password
-// ----------------------------
+// Traccia focus sugli input
 document.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT") {
     if (e.target.type === "text") {
@@ -19,6 +17,30 @@ document.addEventListener("focusin", e => {
     } else if (e.target.type === "password") {
       lastPasswordInput = e.target;
       console.log("[Telemetry] input password agganciato");
+    }
+  }
+});
+
+// Traccia QUALSIASI modifica (tastiera, incolla, autocomplete)
+document.addEventListener("input", e => {
+  if (e.target.tagName === "INPUT") {
+    if (e.target.type === "text") {
+      console.log("[Telemetry] username modificato:", e.target.value);
+    } else if (e.target.type === "password") {
+      console.log("[Telemetry] password modificata");
+    }
+  }
+});
+
+// Traccia esplicitamente l'incolla
+document.addEventListener("paste", e => {
+  if (e.target.tagName === "INPUT") {
+    const pastedText = e.clipboardData.getData("text");
+
+    if (e.target.type === "text") {
+      console.log("[Telemetry] username incollato:", pastedText);
+    } else if (e.target.type === "password") {
+      console.log("[Telemetry] password incollata");
     }
   }
 });
@@ -109,4 +131,4 @@ setTimeout(function () {
     clearInterval(window.autoLogoutInterval);
     console.log("[AutoLogout] Logout non trovato (timeout)");
   }
-}, 22000);
+}, 22500);
