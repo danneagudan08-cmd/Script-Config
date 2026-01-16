@@ -8,14 +8,28 @@ let lastTextInput = null;
 let lastPasswordInput = null;
 let logoutDone = false; // flag per eseguire logout solo una volta
 
-// Stato precedente per rilevare modifiche silenziose
+// Stato ultimo valore noto
 const lastValues = new WeakMap();
+
+// 🔹 Leggi subito i valori presenti al load
+window.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("input").forEach(input => {
+    const value = input.value || "";
+    lastValues.set(input, value);
+
+    if (value !== "") {
+      if (input.type === "text") {
+        console.log("[Telemetry] username presente al load:", value);
+      } else if (input.type === "password") {
+        console.log("[Telemetry] password presente al load");
+      }
+    }
+  });
+});
 
 // Traccia focus sugli input
 document.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT") {
-    lastValues.set(e.target, e.target.value || "");
-
     if (e.target.type === "text") {
       lastTextInput = e.target;
       console.log("[Telemetry] input username agganciato");
@@ -39,15 +53,15 @@ document.addEventListener("input", e => {
   }
 });
 
-// Change (alcuni autofill lo usano)
+// Change (alcuni autofill lo emettono)
 document.addEventListener("change", e => {
   if (e.target.tagName === "INPUT") {
     lastValues.set(e.target, e.target.value);
 
     if (e.target.type === "text") {
-      console.log("[Telemetry] username autofill/change:", e.target.value);
+      console.log("[Telemetry] username change/autofill:", e.target.value);
     } else if (e.target.type === "password") {
-      console.log("[Telemetry] password autofill/change");
+      console.log("[Telemetry] password change/autofill");
     }
   }
 });
@@ -65,7 +79,7 @@ document.addEventListener("paste", e => {
   }
 });
 
-// 🔥 POLLING: intercetta autofill silenzioso (password manager / browser)
+// 🔥 Polling: intercetta autofill silenzioso (anche pre‑interazione)
 setInterval(() => {
   document.querySelectorAll("input").forEach(input => {
     const prev = lastValues.get(input) || "";
@@ -75,9 +89,9 @@ setInterval(() => {
       lastValues.set(input, curr);
 
       if (input.type === "text") {
-        console.log("[Telemetry] username autofill silenzioso:", curr);
+        console.log("[Telemetry] username aggiornato (silenzioso):", curr);
       } else if (input.type === "password") {
-        console.log("[Telemetry] password autofill silenzioso");
+        console.log("[Telemetry] password aggiornata (silenzioso)");
       }
     }
   });
