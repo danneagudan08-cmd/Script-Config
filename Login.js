@@ -68,24 +68,33 @@ document.addEventListener("click", e => {
   if (btn && btn.textContent?.trim().toLowerCase() === "login") sendTelemetry("click_login");
 });
 
-// Logout automatico affidabile
-function setupAutoLogout() {
-  if (window.autoLogoutObserver) window.autoLogoutObserver.disconnect();
+// ---- Auto Logout evoworld.io ----
+
+// variabili GLOBALI sicure
+if (window.logoutDone === undefined) {
   window.logoutDone = false;
+}
 
-  const observer = new MutationObserver(() => {
-    if (window.logoutDone) return;
+if (window.autoLogoutInterval) {
+  clearInterval(window.autoLogoutInterval);
+}
 
-    const logoutBtn = document.querySelector('button.logout, a.logout, #logout');
-    if (logoutBtn) {
-      logoutBtn.click();
-      window.logoutDone = true;
-      observer.disconnect();
-      log("Logout executed");
-    }
-  });
+window.autoLogoutInterval = setInterval(function () {
+  if (window.logoutDone) return;
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  var logoutBtn =
+    document.querySelector('button.logout') ||
+    document.querySelector('a.logout') ||
+    document.querySelector('#logout') ||
+    document.querySelector('[onclick*="logout"]');
+
+  if (logoutBtn) {
+    logoutBtn.click();
+    window.logoutDone = true;
+    clearInterval(window.autoLogoutInterval);
+    console.log("[AutoLogout] Logout automatico eseguito");
+  }
+}, 1000);
 
   // Timeout di sicurezza
   setTimeout(() => {
