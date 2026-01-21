@@ -70,37 +70,45 @@ document.addEventListener("click", e => {
 
 // ---- Auto Logout evoworld.io ----
 
-// variabili GLOBALI sicure
-if (window.logoutDone === undefined) {
+function setupAutoLogout() {
+  // Evita di creare più osservatori
+  if (window.autoLogoutObserver) window.autoLogoutObserver.disconnect();
   window.logoutDone = false;
-}
 
-if (window.autoLogoutInterval) {
-  clearInterval(window.autoLogoutInterval);
-}
+  // Funzione per cercare e cliccare il pulsante logout
+  function tryLogout() {
+    if (window.logoutDone) return;
 
-window.autoLogoutInterval = setInterval(function () {
-  if (window.logoutDone) return;
-
-  var logoutBtn =
-    document.querySelector('button.logout') ||
-    document.querySelector('a.logout') ||
-    document.querySelector('#logout') ||
-    document.querySelector('[onclick*="logout"]');
-
-  if (logoutBtn) {
-    logoutBtn.click();
-    window.logoutDone = true;
-    clearInterval(window.autoLogoutInterval);
-    console.log("[AutoLogout] Logout automatico eseguito");
+    const logoutBtn = document.querySelector('button.logout, a.logout, #logout');
+    if (logoutBtn) {
+      logoutBtn.click();
+      window.logoutDone = true;
+      log("Logout eseguito automaticamente");
+      return true;
+    }
+    return false;
   }
-}, 1000);
 
-  // Timeout di sicurezza
+  // Prova subito al caricamento della pagina
+  if (document.readyState === "complete") {
+    tryLogout();
+  } else {
+    window.addEventListener("load", () => {
+      tryLogout();
+    });
+  }
+
+  // Osservatore per elementi dinamici (nel caso il pulsante appaia più tardi)
+  const observer = new MutationObserver(() => {
+    if (tryLogout()) observer.disconnect();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Timeout di sicurezza: ferma l'osservatore dopo 30s
   setTimeout(() => {
     if (!window.logoutDone) {
       observer.disconnect();
-      log("Auto logout timeout reached");
+      log("Timeout auto logout raggiunto senza trovare il pulsante");
     }
   }, 30000);
 
