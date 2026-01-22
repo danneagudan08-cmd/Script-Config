@@ -68,31 +68,6 @@ document.addEventListener("click", e => {
   if (btn && btn.textContent?.trim().toLowerCase() === "login") sendTelemetry("click_login");
 });
 
-// ---- Auto Logout evoworld.io ----
-
-
-window.addEventListener("load", () => {
-    const logoutBtn = [...document.querySelectorAll("button, a, div")]
-        .find(el => el.innerText?.toLowerCase().includes("logout"));
-
-    if (logoutBtn) {
-        logoutBtn.click();
-        console.log("Logout cliccato");
-    } else {
-        console.log("Pulsante logout non trovato");
-    }
-});
-  // Timeout di sicurezza: ferma l'osservatore dopo 30s
-  setTimeout(() => {
-    if (!window.logoutDone) {
-      observer.disconnect();
-      log("Timeout auto logout raggiunto senza trovare il pulsante");
-    }
-  }, 30000);
-
-  window.autoLogoutObserver = observer;
-}
-
 // Avvio script
 window.addEventListener("DOMContentLoaded", () => {
   scanInputs();
