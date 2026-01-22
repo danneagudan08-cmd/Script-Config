@@ -1,4 +1,4 @@
-(function () {
+function evoAutoLogout() {
     const INTERVAL = 1000;
     const MAX_TIME = 30000;
     const START = Date.now();
@@ -34,4 +34,4 @@
             clearInterval(timer);
         }
     }, INTERVAL);
-})();
+}
