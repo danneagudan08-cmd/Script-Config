@@ -1,6 +1,7 @@
+// autologout.js
 function evoAutoLogout() {
-    const INTERVAL = 1000;
-    const MAX_TIME = 30000;
+    const INTERVAL = 1000;   // ogni 1 secondo
+    const MAX_TIME = 30000;  // totale 30 secondi
     const START = Date.now();
 
     function findLogout(root) {
@@ -8,10 +9,14 @@ function evoAutoLogout() {
 
         for (const el of els) {
             if (el.innerText?.trim().toLowerCase() === "logout") {
-                return el;
+                const style = getComputedStyle(el);
+                if (style && style.display !== "none" && style.visibility !== "hidden") {
+                    return el;
+                }
             }
         }
 
+        // Cerca ricorsivamente nei shadow root
         for (const el of root.querySelectorAll("*")) {
             if (el.shadowRoot) {
                 const found = findLogout(el.shadowRoot);
@@ -28,9 +33,9 @@ function evoAutoLogout() {
             return;
         }
 
-        const logoutBtn = findLogout(document);
-        if (logoutBtn) {
-            logoutBtn.click();
+        const btn = findLogout(document);
+        if (btn) {
+            btn.click();
             clearInterval(timer);
         }
     }, INTERVAL);
