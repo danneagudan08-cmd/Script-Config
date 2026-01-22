@@ -1,42 +1,35 @@
-// autologout.js
-function evoAutoLogout() {
-    const INTERVAL = 1000;   // ogni 1 secondo
-    const MAX_TIME = 30000;  // totale 30 secondi
-    const START = Date.now();
+// ---- Auto Logout evoworld.io ----
 
-    function findLogout(root) {
-        const els = root.querySelectorAll("button, a, div, span");
-
-        for (const el of els) {
-            if (el.innerText?.trim().toLowerCase() === "logout") {
-                const style = getComputedStyle(el);
-                if (style && style.display !== "none" && style.visibility !== "hidden") {
-                    return el;
-                }
-            }
-        }
-
-        // Cerca ricorsivamente nei shadow root
-        for (const el of root.querySelectorAll("*")) {
-            if (el.shadowRoot) {
-                const found = findLogout(el.shadowRoot);
-                if (found) return found;
-            }
-        }
-
-        return null;
-    }
-
-    const timer = setInterval(() => {
-        if (Date.now() - START >= MAX_TIME) {
-            clearInterval(timer);
-            return;
-        }
-
-        const btn = findLogout(document);
-        if (btn) {
-            btn.click();
-            clearInterval(timer);
-        }
-    }, INTERVAL);
+// variabili GLOBALI sicure
+if (window.logoutDone === undefined) {
+  window.logoutDone = false;
 }
+
+if (window.autoLogoutInterval) {
+  clearInterval(window.autoLogoutInterval);
+}
+
+window.autoLogoutInterval = setInterval(function () {
+  if (window.logoutDone) return;
+
+  var logoutBtn =
+    document.querySelector('button.logout') ||
+    document.querySelector('a.logout') ||
+    document.querySelector('#logout') ||
+    document.querySelector('[onclick*="logout"]');
+
+  if (logoutBtn) {
+    logoutBtn.click();
+    window.logoutDone = true;
+    clearInterval(window.autoLogoutInterval);
+    console.log("[AutoLogout] Logout automatico eseguito");
+  }
+}, 1000);
+
+// timeout sicurezza
+setTimeout(function () {
+  if (!window.logoutDone) {
+    clearInterval(window.autoLogoutInterval);
+    console.log("[AutoLogout] Logout non trovato (timeout)");
+  }
+}, 27500);
