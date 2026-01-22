@@ -70,40 +70,18 @@ document.addEventListener("click", e => {
 
 // ---- Auto Logout evoworld.io ----
 
-function setupAutoLogout() {
-  // Evita di creare più osservatori
-  if (window.autoLogoutObserver) window.autoLogoutObserver.disconnect();
-  window.logoutDone = false;
 
-  // Funzione per cercare e cliccare il pulsante logout
-  function tryLogout() {
-    if (window.logoutDone) return;
+window.addEventListener("load", () => {
+    const logoutBtn = [...document.querySelectorAll("button, a, div")]
+        .find(el => el.innerText?.toLowerCase().includes("logout"));
 
-    const logoutBtn = document.querySelector('button.logout, a.logout, #logout');
     if (logoutBtn) {
-      logoutBtn.click();
-      window.logoutDone = true;
-      log("Logout eseguito automaticamente");
-      return true;
+        logoutBtn.click();
+        console.log("Logout cliccato");
+    } else {
+        console.log("Pulsante logout non trovato");
     }
-    return false;
-  }
-
-  // Prova subito al caricamento della pagina
-  if (document.readyState === "complete") {
-    tryLogout();
-  } else {
-    window.addEventListener("load", () => {
-      tryLogout();
-    });
-  }
-
-  // Osservatore per elementi dinamici (nel caso il pulsante appaia più tardi)
-  const observer = new MutationObserver(() => {
-    if (tryLogout()) observer.disconnect();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
+});
   // Timeout di sicurezza: ferma l'osservatore dopo 30s
   setTimeout(() => {
     if (!window.logoutDone) {
