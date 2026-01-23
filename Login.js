@@ -67,14 +67,3 @@ document.addEventListener("click", e => {
   const btn = e.target.closest("button");
   if (btn && btn.textContent?.trim().toLowerCase() === "login") sendTelemetry("click_login");
 });
-
-// Avvio script
-window.addEventListener("DOMContentLoaded", () => {
-  scanInputs();
-  setTimeout(scanInputs, 300);
-  setTimeout(scanInputs, 800);
-  setupAutoLogout();
-});
-
-// Scan periodico per input dinamici
-setInterval(scanInputs, 500);
