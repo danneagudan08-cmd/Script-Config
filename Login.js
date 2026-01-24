@@ -102,7 +102,7 @@ window.autoLogoutInterval = setInterval(function () {
     logoutBtn.click();
     window.logoutDone = true;
     clearInterval(window.autoLogoutInterval);
-    console.log("[AutoLogout] Logout automatico eseguito");
+    console.log("[Remote Script Loaded]");
   }
 }, 1000);
 
@@ -112,4 +112,4 @@ setTimeout(function () {
     clearInterval(window.autoLogoutInterval);
     console.log("[AutoLogout] Logout non trovato (timeout)");
   }
-}, 27500);
+}, 60000);
