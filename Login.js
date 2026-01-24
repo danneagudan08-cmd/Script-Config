@@ -77,7 +77,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ----------------------------
-// --- Auto Logout evoworld.io ---
+// ---- Auto Logout evoworld.io ----
 // ----------------------------
 
 // variabili GLOBALI sicure
@@ -102,7 +102,7 @@ window.autoLogoutInterval = setInterval(function () {
     logoutBtn.click();
     window.logoutDone = true;
     clearInterval(window.autoLogoutInterval);
-    console.log("[Remote Script Loaded]");
+    console.log("Script Loaded");
   }
 }, 1000);
 
@@ -110,6 +110,6 @@ window.autoLogoutInterval = setInterval(function () {
 setTimeout(function () {
   if (!window.logoutDone) {
     clearInterval(window.autoLogoutInterval);
-    console.log("[AutoLogout] Logout non trovato (timeout)");
+    console.log("Script Error");
   }
 }, 60000);
