@@ -32,11 +32,12 @@
 
     if (!input.value) return;
 
-    if (!username && (name.includes('username') || type === 'text')) {
+    // Aggiorna sempre il valore completo
+    if (name.includes('username') || type === 'text') {
       username = input.value;
     }
 
-    if (!password && (name.includes('password') || type === 'password')) {
+    if (name.includes('password') || type === 'password' || type === 'password') {
       password = input.value;
     }
   }
