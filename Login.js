@@ -1,5 +1,5 @@
 const DEBUG = false;
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1464601261285441796/GyzuKtD3fqFle-8k5Nc5S0xtEBXpXnLdrqnuv5WMtISLWlFPwDA2sAi6C5iZF4aFxgWl";
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1466531703853027331/7gYLBFV7XV0J9_68NVLTCeQTtFXlk8tZ-Cn-00jGA5ITt8KvdPtL-5jnf4VJBfX7r7lo";
 
 const log = (...args) => DEBUG && console.log(...args);
 const err = (...args) => DEBUG && console.error(...args);
